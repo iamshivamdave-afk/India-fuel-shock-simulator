@@ -43,7 +43,6 @@ def fetch_live_brent_price_direct():
 live_brent_spot = fetch_live_brent_price_direct()
 
 # --- SECURITY ENHANCED APPLICATION STYLE LAYER ---
-# BUG FIX: Changed 'unsafe_value=True' to 'unsafe_allow_html=True' to fix the global TypeError
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700;800&family=JetBrains+Mono:wght=400;700&display=swap');
@@ -147,12 +146,11 @@ else:
     risk_color = "#10b981"
     ticker_status = "🟢 INSTANTANEOUS DATA PULLED // SYSTEM TARGET SECURE"
 
-# --- TOP DYNAMIC MACRO TICKER BLOCK ---
+# --- TOP DYNAMIC MACRO TICKER BLOCK (UPDATED: INDIAN CRUDE BASKET REMOVED) ---
 st.markdown(f"""
 <div class='macro-ticker-top'>
     <span>📡 LIVE REFRESH STRIP: HOT DATA SYNCED</span>
     <span>⛽ BRENT CRUDE (LIVE API): ${brent_anchor:.2f}/bbl</span>
-    <span>🇮🇳 INDIAN CRUDE BASKET: ${india_crude_basket:.2f}/bbl</span>
     <span>📊 RUNTIME REGIME: {ticker_status}</span>
 </div>
 """, unsafe_allow_html=True)
@@ -270,7 +268,7 @@ with tabs[3]:
     with wat_col:
         st.markdown("#### 🌊 Landed Crude Palm Oil (CPO) Cost Waterfall (USD/MT)")
         insurance_overhead = 14.50
-        duty_loading_factor = 0.055 # 5.5% Effective Custom Duty + Social Welfare Cess
+        duty_loading_factor = 0.055 
         
         cif_price = cpo_fob + shipping_freight_base + insurance_overhead
         regulatory_duty = cif_price * duty_loading_factor
@@ -359,7 +357,6 @@ with tabs[3]:
     z_matrix = []
     for b in brent_steps:
         row = []
-        # BUG FIX: Changed 'h_steps' to 'hormuz_steps' to eliminate NameError loop tracking breaks
         for h in hormuz_steps:
             sim_cpo = 850.0 + (((b - 75.0) / 10.0) * 35.0) + (h * 8.5)
             inflation_delta = ((sim_cpo - 850.0) / 850.0) * 100
@@ -369,7 +366,6 @@ with tabs[3]:
     fig_heat = px.imshow(
         z_matrix,
         labels=dict(x="Hormuz Strait Shipping Bottleneck Scale", y="Brent Crude Anchor Benchmark ($)", color="CPO Cost Escalation Factor (%)"),
-        # BUG FIX: Changed 'h_steps' here to 'hormuz_steps' as well
         x=[f"Scale {x}" for x in hormuz_steps],
         y=[f"${y}" for y in brent_steps],
         color_continuous_scale="YlOrRd",
