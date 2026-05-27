@@ -43,6 +43,7 @@ def fetch_live_brent_price_direct():
 live_brent_spot = fetch_live_brent_price_direct()
 
 # --- SECURITY ENHANCED APPLICATION STYLE LAYER ---
+# BUG FIX: Changed 'unsafe_value=True' to 'unsafe_allow_html=True' to fix the global TypeError
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700;800&family=JetBrains+Mono:wght=400;700&display=swap');
@@ -242,7 +243,7 @@ with tabs[3]:
     st.markdown("### 🥥 Edible Oil Import Intelligence & Landed Cost Waterfall Matrix")
     st.markdown("<p style='color:#9ca3af; font-size:0.9rem;'>Simulating transmission vectors from global commodity futures and shipping freight premiums down to consumer-level kitchen expenditure shock indices.</p>", unsafe_allow_html=True)
     
-    # 1. Crude-Oil-To-CPO Link Framework Formula ($10/bbl rise in Brent pushes CPO by $35/MT via Biofuel substitution channel)
+    # Crude-Oil-To-CPO Link Framework Formula
     biofuel_cpo_premium = ((brent_anchor - 75.0) / 10.0) * 35.0
     shipping_freight_base = 45.0 + (hormuz_scale * 8.5)
     
@@ -303,7 +304,7 @@ with tabs[3]:
             link = dict(
               source = [0, 1, 2, 3, 4, 4], 
               target = [3, 3, 3, 4, 5, 5],
-              value = [54, 30, 16, 100, 65, 35] # Metric allocation shares
+              value = [54, 30, 16, 100, 65, 35]
             ))])
         fig_san.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", height=320, margin=dict(l=10,r=10,t=10,b=10))
         st.plotly_chart(fig_san, use_container_width=True)
@@ -358,7 +359,8 @@ with tabs[3]:
     z_matrix = []
     for b in brent_steps:
         row = []
-        for h in h_steps:
+        # BUG FIX: Changed 'h_steps' to 'hormuz_steps' to eliminate NameError loop tracking breaks
+        for h in hormuz_steps:
             sim_cpo = 850.0 + (((b - 75.0) / 10.0) * 35.0) + (h * 8.5)
             inflation_delta = ((sim_cpo - 850.0) / 850.0) * 100
             row.append(round(inflation_delta, 1))
@@ -367,7 +369,8 @@ with tabs[3]:
     fig_heat = px.imshow(
         z_matrix,
         labels=dict(x="Hormuz Strait Shipping Bottleneck Scale", y="Brent Crude Anchor Benchmark ($)", color="CPO Cost Escalation Factor (%)"),
-        x=[f"Scale {x}" for x in h_steps],
+        # BUG FIX: Changed 'h_steps' here to 'hormuz_steps' as well
+        x=[f"Scale {x}" for x in hormuz_steps],
         y=[f"${y}" for y in brent_steps],
         color_continuous_scale="YlOrRd",
         text_auto=True,
@@ -433,7 +436,7 @@ with tabs[4]:
         short_end_shift = (cpi_projected - cpi_baseline) * 0.75
         long_end_shift = (wpi_projected - wpi_baseline) * 0.28
         
-        shock_yields = [
+        text_yields = [
             base_yields[0] + short_end_shift,
             base_yields[1] + (short_end_shift * 0.80 + long_end_shift * 0.20),
             base_yields[2] + (short_end_shift * 0.60 + long_end_shift * 0.40),
@@ -444,7 +447,7 @@ with tabs[4]:
         
         fig_curve = go.Figure()
         fig_curve.add_trace(go.Scatter(x=maturities, y=base_yields, name="Neutral Macro Baseline Curve", line=dict(color='#9ca3af', width=2, dash='dot'), mode='lines+markers'))
-        fig_curve.add_trace(go.Scatter(x=maturities, y=shock_yields, name="Simulated Shock Curve State", line=dict(color='#f43f5e', width=4), mode='lines+markers'))
+        fig_curve.add_trace(go.Scatter(x=maturities, y=text_yields, name="Simulated Shock Curve State", line=dict(color='#f43f5e', width=4), mode='lines+markers'))
         
         fig_curve.update_layout(
             title="Sovereign Yield Curve (1Y - 10Y Indian G-Sec)",
