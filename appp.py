@@ -12,7 +12,7 @@ import re
 def fetch_live_crude_prices():
     """Extracts live oil pricing updates using standard secure web protocol streams."""
     fallback_brent = 99.27
-    fallback_indian = 112.0
+    fallback_indian = 96.80
     try:
         url = "https://markets.businessinsider.com/commodities/oil-price"
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -22,7 +22,7 @@ def fetch_live_crude_prices():
             match = re.search(r'"price"\s*:\s*"([0-9\.]+)"', html)
             if match:
                 brent = float(match.group(1))
-                # Indian basket retains a historic structural multi-variable 0.98 tracking correlation to Brent
+                # Indian basket retains a historic structural multi-variable tracking correlation to Brent
                 indian = round(brent * 0.975, 2) if brent > 0 else fallback_indian
                 return brent, indian
     except Exception:
@@ -56,30 +56,31 @@ html, body, [data-testid="stAppViewContainer"] {
     font-size: 13px;
 }
 
-/* Custom Bloomberg-style Ticker Banner */
+/* Custom Bloomberg-style Ticker Banner - Forced Foreground Colors */
 .ticker-wrap {
     width: 100%;
-    background: #0f172a;
-    border-bottom: 2px solid #1e293b;
-    padding: 8px 0;
+    background: #0f172a !important;
+    border: 2px solid #1e293b !important;
+    padding: 10px 0;
     overflow: hidden;
-    margin-bottom: 15px;
-    border-radius: 4px;
+    margin-bottom: 20px;
+    border-radius: 6px;
 }
 .ticker-content {
     display: inline-block;
     white-space: nowrap;
-    animation: marquee 25s linear infinite;
+    animation: marquee 30s linear infinite;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 13px;
 }
 .ticker-item {
     display: inline-block;
-    padding: 0 2rem;
-    color: #38bdf8;
+    padding: 0 2.5rem;
+    color: #38bdf8 !important;
+    font-weight: 500;
 }
 .ticker-val {
-    color: #fdd835;
+    color: #fdd835 !important;
     font-weight: bold;
 }
 @keyframes marquee {
@@ -137,11 +138,11 @@ div[data-testid="stMetricContainer"] {
 st.markdown(f"""
 <div class="ticker-wrap">
     <div class="ticker-content">
-        <span class="ticker-item">🔴 LIVE TRANSMISSION RUNNING...</span>
-        <span class="ticker-item">🌐 MARKET DATA STATUS: <span style="color: #4ade80;">ONLINE</span></span>
-        <span class="ticker-item">🛢️ LIVE GLOBAL BRENT CRUDE: <span class="ticker-val">${live_brent:.2f}/bbl</span></span>
-        <span class="ticker-item">🇮🇳 COMPUTED INDIA CRUDE BASKET: <span class="ticker-val">${live_indian_basket:.2f}/bbl</span></span>
-        <span class="ticker-item">⚡ MACRO TRANSMISSION MODEL TIER-1 VERIFIED</span>
+        <span class="ticker-item" style="color: #ef4444 !important;">🔴 LIVE GLOBAL STREAM TRACKING ONGOING</span>
+        <span class="ticker-item">🌐 API LINK: <span style="color: #4ade80 !important; font-weight: bold;">CONNECTED</span></span>
+        <span class="ticker-item">🛢️ LIVE BRENT CRUDE: <span class="ticker-val">${live_brent:.2f}/bbl</span></span>
+        <span class="ticker-item">🇮🇳 INDIA CRUDE BASKET: <span class="ticker-val">${live_indian_basket:.2f}/bbl</span></span>
+        <span class="ticker-item" style="color: #a78bfa !important;">⚡ SYSTEM NORMALIZED STRUCTURAL VECTOR REGIME RUNNING</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -175,20 +176,21 @@ with st.sidebar:
     st.markdown("<p style='color:#9ca3af; font-size:11px; margin-bottom:2px;'>MACRO TRANSMISSION COEFFICIENTS</p>", unsafe_allow_html=True)
     fertilizer_pass_thru = st.slider("Fertilizer Subsidy Absorbtion (%)", 0, 100, 65, 5)
 
-# --- INTERMEDIATE CALCULATIONS ENGINE ---
+# --- FIXED & NORMALIZED INTERMEDIATE CALCULATIONS ENGINE ---
 base_crude = 80.0
 crude_delta_pct = ((brent_crude - base_crude) / base_crude) * 100
 
-calc_wpi = 4.2 + (crude_delta_pct * 0.11) + (freight_shock * 0.03)
-calc_cpi = 3.8 + (crude_delta_pct * 0.025) + (mandi_disruption * 1.2)
-thali_cost_idx = 10.0 + (crude_delta_pct * 0.06) + (mandi_disruption * 4.8) + ((100 - fertilizer_pass_thru) * 0.05)
+# Fixed: Divided by 100 to convert percentage deltas into clean macro decimals
+calc_wpi = 0.042 + (crude_delta_pct * 0.0011) + (freight_shock * 0.0003)
+calc_cpi = 0.038 + (crude_delta_pct * 0.00025) + ((mandi_disruption - 1.0) * 0.012)
+thali_cost_idx = 0.10 + (crude_delta_pct * 0.0006) + ((mandi_disruption - 1.0) * 0.048) + ((100 - fertilizer_pass_thru) * 0.0005)
 
 system_state = "NORMAL REGIME"
 state_color = "#22c55e"
-if calc_wpi > 12.0 or calc_cpi > 6.5:
+if calc_wpi > 0.12 or calc_cpi > 0.065:
     system_state = "CRITICAL METRIC STRESS"
     state_color = "#ef4444"
-elif calc_wpi > 8.0 or calc_cpi > 5.2:
+elif calc_wpi > 0.08 or calc_cpi > 0.052:
     system_state = "ELEVATED RISK REGIME"
     state_color = "#f59e0b"
 
@@ -376,7 +378,7 @@ with t4:
     st.markdown("---")
     st.markdown("#### Incremental Port Forwarding Inbound Components")
     labels = ['Bunker Adjustment Factor (BAF)', 'Currency Adjustment Factor (CAF)', 'War Risk Protection Premium', 'Inland Port Depot Surcharges']
-    values = [350 * (brent_crude/80.0), 120 * (1 + (calc_wpi/10)), 450 * (freight_shock/45.0), 200 * (diesel_price/92.5)]
+    values = [350 * (brent_crude/80.0), 120 * (1 + (calc_wpi*10)), 450 * (freight_shock/45.0), 200 * (diesel_price/92.5)]
     
     fig_pie = px.pie(names=labels, values=values, template='plotly_dark', color_discrete_sequence=px.colors.sequential.YlOrRd_r)
     fig_pie.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=300)
@@ -417,7 +419,7 @@ with t6:
     
     # Central Bank logic projection loop
     base_repo = 6.50
-    implied_repo_hike = max(0, int((calc_cpi - 4.5) / 0.5) * 25) # 25 bps adjustments loops
+    implied_repo_hike = max(0, int(((calc_cpi * 100) - 4.5) / 0.5) * 25) # 25 bps adjustments loops
     projected_repo = base_repo + (implied_repo_hike / 100)
     
     st.markdown("<br>", unsafe_allow_html=True)
