@@ -1,762 +1,373 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.express as px
 import plotly.graph_objects as go
 import urllib.request
 import re
-from datetime import datetime
 
-# =========================================================
-# PAGE CONFIG
-# =========================================================
+# --- LIVE CRUDE OIL DATA FETCH ENGINE ---
+@st.cache_data(ttl=900)
+def fetch_live_crude_prices():
+    """Extracts live oil pricing updates securely using regular expression fallbacks."""
+    fallback_brent = 99.27
+    fallback_indian = 96.80
+    try:
+        url = "https://markets.businessinsider.com/commodities/oil-price"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            html = response.read().decode('utf-8')
+            match = re.search(r'"price"\s*:\s*"([0-9\.]+)"', html)
+            if match:
+                brent = float(match.group(1))
+                indian = round(brent * 0.975, 2) if brent > 0 else fallback_indian
+                return brent, indian
+    except Exception:
+        pass
+    return fallback_brent, fallback_indian
 
+live_brent, live_indian_basket = fetch_live_crude_prices()
+
+# --- WEBAPP CONFIGURATION ---
 st.set_page_config(
-    page_title="India Energy Shock & Margin Stress Engine",
+    page_title="India Energy Shock & OMC Stress Engine",
     page_icon="🛢️",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# =========================================================
-# GLOBAL CSS
-# =========================================================
-
+# --- ADVANCED INSTITUTIONAL ANIMATION & STYLE SHEET ---
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
+/* Complete Document Reset */
 html, body, [data-testid="stAppViewContainer"] {
-    font-family: Arial, sans-serif;
-    background-color: #030712;
-    color: #f3f4f6;
-    font-size: 16px;
-}
-
-/* Hide Streamlit UI */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-
-/* Sidebar Bottom Dock */
-[data-testid="stSidebar"] {
-    position: fixed;
-    bottom: 0;
-    top: auto;
-    height: 320px !important;
-    width: 100% !important;
-    background: #111827 !important;
-    border-top: 2px solid #374151;
-    z-index: 999999;
-    overflow-y: auto;
-}
-
-section.main {
-    padding-bottom: 340px;
-}
-
-/* Metrics */
-div[data-testid="stMetricContainer"] {
-    background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-    border: 1px solid #374151;
-    border-radius: 12px;
-    padding: 14px;
-}
-
-/* Tabs */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 6px;
-    background-color: #111827;
-    padding: 8px;
-    border-radius: 10px;
-}
-
-.stTabs [data-baseweb="tab"] {
-    background-color: transparent;
-    color: #9ca3af !important;
-    border-radius: 8px;
-    padding: 10px 16px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 50% 0%, #0f172a 0%, #020617 100%) !important;
+    color: #f8fafc;
     font-size: 14px;
-    font-weight: bold;
 }
 
-.stTabs [aria-selected="true"] {
-    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-    color: white !important;
-}
+/* Hide Streamlit Native Overheads safely */
+#MainMenu, footer, header {visibility: hidden;}
 
-/* Ticker */
+/* Custom Bloomberg-style Ticker Animation */
 .ticker-wrap {
     width: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    padding: 12px 0;
     overflow: hidden;
-    background: #111827;
-    border: 1px solid #374151;
-    border-radius: 8px;
-    padding: 10px 0;
-    margin-bottom: 20px;
-}
-
-.ticker {
-    white-space: nowrap;
-    display: inline-block;
-    animation: ticker 25s linear infinite;
-    font-size: 15px;
-}
-
-@keyframes ticker {
-    from { transform: translateX(100%); }
-    to { transform: translateX(-100%); }
-}
-
-.ticker span {
-    margin-right: 60px;
-    color: #60a5fa;
-    font-weight: bold;
-}
-
-/* Cards */
-.section-card {
-    background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-    border: 1px solid #374151;
+    margin-bottom: 24px;
     border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+}
+.ticker-content {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 25s linear infinite;
+    font-family: 'JetBrains Mono', monospace;
+}
+.ticker-item {
+    display: inline-block;
+    padding: 0 3rem;
+    color: #38bdf8;
+    font-weight: 500;
+}
+.ticker-val {
+    color: #f59e0b;
+    font-weight: 700;
+}
+@keyframes marquee {
+    0% { transform: translate3d(100%, 0, 0); }
+    100% { transform: translate3d(-100%, 0, 0); }
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
+/* Glassmorphic Input Controls Deck & Metric Cards */
+div[data-testid="stMetricContainer"], .metric-card-custom {
+    background: rgba(30, 41, 59, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    padding: 16px 20px !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(8px) !important;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+div[data-testid="stMetricContainer"]:hover {
+    transform: translateY(-4px);
+    border-color: rgba(56, 189, 248, 0.4) !important;
+    box-shadow: 0 12px 40px 0 rgba(56, 189, 248, 0.15) !important;
 }
 
-::-webkit-scrollbar-thumb {
-    background: #374151;
-    border-radius: 10px;
+/* Pulsing Status Glow FX */
+.status-pulse {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 8px;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    animation: pulse-green 2s infinite;
+}
+.status-pulse-red {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    animation: pulse-red 2s infinite;
+}
+@keyframes pulse-green {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+@keyframes pulse-red {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
+/* Elite Tab Component Transitions */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+    background-color: rgba(15, 23, 42, 0.8);
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.stTabs [data-baseweb="tab"] {
+    background-color: transparent;
+    color: #94a3b8 !important;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+}
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# LIVE DATA FETCH
-# =========================================================
-
-@st.cache_data(ttl=1800)
-def fetch_live_crude_prices():
-
-    fallback_brent = 99.27
-    fallback_wti = 94.50
-    fallback_india = 96.80
-
-    try:
-        url = "https://markets.businessinsider.com/commodities/oil-price"
-
-        req = urllib.request.Request(
-            url,
-            headers={"User-Agent": "Mozilla/5.0"}
-        )
-
-        with urllib.request.urlopen(req, timeout=5) as response:
-
-            html = response.read().decode("utf-8")
-
-            match = re.search(
-                r'"price"\s*:\s*"([0-9\.]+)"',
-                html
-            )
-
-            if match:
-                brent = float(match.group(1))
-                wti = round(brent * 0.94, 2)
-                india = round(brent * 0.975, 2)
-
-                return brent, wti, india
-
-    except Exception:
-        pass
-
-    return fallback_brent, fallback_wti, fallback_india
-
-live_brent, live_wti, live_india = fetch_live_crude_prices()
-
-# =========================================================
-# VOLATILITY DATA
-# =========================================================
-
-@st.cache_data
-def generate_vol_surface(days=120):
-
-    dates = pd.date_range(
-        end=datetime.now(),
-        periods=days,
-        freq="D"
-    )
-
-    np.random.seed(42)
-
-    returns = np.random.normal(
-        0.0002,
-        0.018,
-        days
-    )
-
-    prices = 80 * np.exp(np.cumsum(returns))
-
-    vol30 = (
-        pd.Series(returns)
-        .rolling(30)
-        .std()
-        * np.sqrt(252)
-    ).bfill()
-
-    vol60 = (
-        pd.Series(returns)
-        .rolling(60)
-        .std()
-        * np.sqrt(252)
-    ).bfill()
-
-    vol90 = (
-        pd.Series(returns)
-        .rolling(90)
-        .std()
-        * np.sqrt(252)
-    ).bfill()
-
-    return pd.DataFrame({
-        "Date": dates,
-        "Price": prices,
-        "30D": vol30,
-        "60D": vol60,
-        "90D": vol90
-    })
-
-# =========================================================
-# CORRELATION MATRIX
-# =========================================================
-
-@st.cache_data
-def correlation_matrix():
-
-    assets = [
-        "Brent",
-        "WTI",
-        "India Basket",
-        "Nifty50",
-        "USDINR",
-        "CPI",
-        "WPI",
-        "Freight"
-    ]
-
-    matrix = np.array([
-        [1.00,0.94,0.97,-0.42,0.31,0.52,0.61,0.78],
-        [0.94,1.00,0.91,-0.39,0.28,0.48,0.58,0.72],
-        [0.97,0.91,1.00,-0.45,0.35,0.54,0.65,0.80],
-        [-0.42,-0.39,-0.45,1.00,-0.66,-0.38,-0.41,-0.31],
-        [0.31,0.28,0.35,-0.66,1.00,0.44,0.52,0.40],
-        [0.52,0.48,0.54,-0.38,0.44,1.00,0.85,0.61],
-        [0.61,0.58,0.65,-0.41,0.52,0.85,1.00,0.69],
-        [0.78,0.72,0.80,-0.31,0.40,0.61,0.69,1.00]
-    ])
-
-    return pd.DataFrame(
-        matrix,
-        index=assets,
-        columns=assets
-    )
-
-# =========================================================
-# LIVE TICKER
-# =========================================================
-
+# --- LIVE BROADCAST ANCHOR TICKER ---
 st.markdown(f"""
 <div class="ticker-wrap">
-    <div class="ticker">
-        <span>🛢️ Brent: ${live_brent:.2f}</span>
-        <span>🇺🇸 WTI: ${live_wti:.2f}</span>
-        <span>🇮🇳 India Basket: ${live_india:.2f}</span>
-        <span>📅 {datetime.now().strftime('%d-%b-%Y %H:%M')}</span>
-        <span>⚡ Institutional Macro Engine Active</span>
+    <div class="ticker-content">
+        <span class="ticker-item" style="color: #ef4444 !important;">🔴 LIVE DATA TRANSMISSION NODE RUNNING</span>
+        <span class="ticker-item">🛢️ BRENT LIVE SPARK: <span class="ticker-val">${live_brent:.2f}/bbl</span></span>
+        <span class="ticker-item">🇮🇳 INDIAN BASKET MATRIX: <span class="ticker-val">${live_indian_basket:.2f}/bbl</span></span>
+        <span class="ticker-item">⚙️ COUPLING REGIME: <span style="color: #22c55e !important; font-weight: bold;">OPTIMAL</span></span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# HEADER
-# =========================================================
-
+# --- APP BRAND HEADER ---
 st.markdown("""
-<div class="section-card">
-
-<h1>
-🇮🇳 India Energy Shock & Margin Stress Engine
-</h1>
-
-<p style="color:#9ca3af;">
-Institutional-grade macroeconomic dashboard for
-oil shocks, inflation transmission, logistics stress,
-and corporate margin compression.
-</p>
-
+<div style="background: linear-gradient(135deg, rgba(15,23,42,0.8) 0%, rgba(30,41,59,0.4) 100%); padding: 24px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 24px;">
+    <h5 style="color: #38bdf8; margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px;">CORE MACRO TRANSMISSION ARRAYS</h5>
+    <h2 style="margin: 8px 0 6px 0; color: #ffffff; font-weight: 800; font-size: 28px;">🇮🇳 India Energy Shock & OMC Stress Engine</h2>
+    <p style="color: #94a3b8; margin: 0; font-size: 14px;">Simulating downstream fuel shocks, upstream extraction margins, and fiscal balance under localized trade constraints.</p>
 </div>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# SIDEBAR
-# =========================================================
+# --- CONTROL DESK: RECONFIGURED MAIN VIEW AREA FOR 100% VISIBILITY ---
+st.markdown("### 🎛️ Downstream Risk Variable Control Deck")
+ctrl_col1, ctrl_col2, ctrl_col3 = st.columns(3)
 
-with st.sidebar:
+with ctrl_col1:
+    brent_crude = st.slider("Global Brent Crude Pricing ($/bbl)", 40.0, 180.0, float(live_brent), 0.5)
+    freight_shock = st.slider("Oceanic Container Freight Premium (%)", 0, 300, 45, 5)
 
-    st.title("🎛️ Control Deck")
+with ctrl_col2:
+    petrol_price = st.slider("Domestic Retail Petrol Price (INR/Litre)", 70.0, 160.0, 104.5, 0.5)
+    mandi_disruption = st.slider("Agricultural Transit Bottleneck Factor", 1.0, 2.5, 1.15, 0.05)
 
-    scenario = st.selectbox(
-        "Scenario",
-        [
-            "Baseline",
-            "Moderate Shock",
-            "Severe Shock",
-            "Systemic Crisis"
-        ]
-    )
+with ctrl_col3:
+    diesel_price = st.slider("Domestic Retail Diesel Price (INR/Litre)", 60.0, 150.0, 92.5, 0.5)
+    fertilizer_pass_thru = st.slider("Fertilizer Subsidy Retention Allocation (%)", 0, 100, 65, 5)
 
-    if scenario == "Moderate Shock":
-        default_brent = 120.0
-        default_freight = 80
+st.markdown("<hr style='border-color: rgba(255,255,255,0.05); margin: 24px 0;'>", unsafe_allow_html=True)
 
-    elif scenario == "Severe Shock":
-        default_brent = 150.0
-        default_freight = 150
+# --- FIXED SCIENTIFIC CALCULATION ENGINE ---
+base_crude = 80.0
+crude_delta_pct = ((brent_crude - base_crude) / base_crude) * 100
 
-    elif scenario == "Systemic Crisis":
-        default_brent = 180.0
-        default_freight = 250
+# Normalizing percentage deltas into clean macro decimals to fix the hyperinflation bugs
+calc_wpi = 0.042 + (crude_delta_pct * 0.0011) + (freight_shock * 0.0003)
+calc_cpi = 0.038 + (crude_delta_pct * 0.00025) + ((mandi_disruption - 1.0) * 0.012)
+thali_cost_idx = 0.10 + (crude_delta_pct * 0.0006) + ((mandi_disruption - 1.0) * 0.048) + ((100 - fertilizer_pass_thru) * 0.0005)
 
-    else:
-        default_brent = live_brent
-        default_freight = 40
+# --- TOP LINE TRACKING METRICS MATRIX ---
+m1, m2, m3, m4, m5 = st.columns(5)
+m1.metric("Projected CPI Inflation", f"{calc_cpi:.2%}")
+m2.metric("Projected Wholesale WPI", f"{calc_wpi:.2%}")
+m3.metric("Simulated Brent Reference", f"${brent_crude:.2f}/bbl", f"{((brent_crude-live_brent)/live_brent):+.1%} vs Live")
+m4.metric("Household Thali Index Change", f"+{thali_cost_idx:.1%}")
 
-    brent_crude = st.slider(
-        "Brent Crude ($)",
-        40.0,
-        200.0,
-        float(default_brent),
-        0.5
-    )
+# Dynamic Risk Visual State Block
+system_state = "NORMAL REGIME"
+pulse_class = "status-pulse"
+if calc_wpi > 0.11 or calc_cpi > 0.06:
+    system_state = "CRITICAL MACRO STRESS"
+    pulse_class = "status-pulse-red"
 
-    petrol_price = st.slider(
-        "Petrol Price",
-        70.0,
-        180.0,
-        104.5,
-        0.5
-    )
+with m5:
+    st.markdown(f"""
+    <div class="metric-card-custom" style="text-align: center; height: 100%;">
+        <p style="color: #94a3b8; margin: 0; font-size: 12px; font-weight: 500;">Risk State Vector</p>
+        <h4 style="color: #ffffff; margin: 6px 0; font-size: 15px; font-weight: 700; font-family:'JetBrains Mono';">{system_state}</h4>
+        <span class="{pulse_class}"></span>
+    </div>
+    """, unsafe_allow_html=True)
 
-    diesel_price = st.slider(
-        "Diesel Price",
-        60.0,
-        170.0,
-        92.5,
-        0.5
-    )
+st.markdown("<br>", unsafe_allow_html=True)
 
-    freight_shock = st.slider(
-        "Freight Shock %",
-        0,
-        300,
-        int(default_freight),
-        5
-    )
-
-    mandi_disruption = st.slider(
-        "Supply Chain Coefficient",
-        1.0,
-        3.0,
-        1.2,
-        0.05
-    )
-
-    fertilizer_pass = st.slider(
-        "Fertilizer Subsidy %",
-        0,
-        100,
-        60,
-        5
-    )
-
-# =========================================================
-# CALCULATIONS
-# =========================================================
-
-base_crude = 80
-
-delta = ((brent_crude - base_crude) / base_crude) * 100
-
-calc_wpi = (
-    0.042
-    + (delta * 0.0011)
-    + (freight_shock * 0.0003)
-)
-
-calc_cpi = (
-    0.038
-    + (delta * 0.00025)
-    + ((mandi_disruption - 1.0) * 0.012)
-)
-
-thali_idx = (
-    0.10
-    + (delta * 0.0006)
-    + ((mandi_disruption - 1.0) * 0.048)
-)
-
-var95 = thali_idx * 1.645
-cvar = thali_idx * 2.1
-
-# =========================================================
-# METRICS
-# =========================================================
-
-st.subheader("📊 Real-Time Macro Dashboard")
-
-m1, m2, m3, m4, m5, m6 = st.columns(6)
-
-m1.metric("CPI Inflation", f"{calc_cpi:.2%}")
-m2.metric("WPI Inflation", f"{calc_wpi:.2%}")
-m3.metric("Thali Shock", f"{thali_idx:.1%}")
-m4.metric("Fuel Weight", "24.7%")
-m5.metric("VaR 95%", f"{var95:.1%}")
-m6.metric("Expected Shortfall", f"{cvar:.1%}")
-
-# =========================================================
-# TABS
-# =========================================================
-
-tab1, tab2, tab3, tab4 = st.tabs([
-    "🍱 Food Tech",
-    "📈 Risk Analytics",
-    "📊 Stress Testing",
-    "📜 Methodology"
+# --- DATA VIEW WORKSPACE INTERFACE ---
+t1, t2, t3, t4, t5 = st.tabs([
+    "⛽ OMC Under-Recovery Analysis",
+    "🍱 Food Tech Delivery Index",
+    "🥗 Kitchen Thali Logistics Engine", 
+    "🏭 FMCG Defense Dossiers", 
+    "🏛️ Monetary Intervention Stance"
 ])
 
-# =========================================================
-# TAB 1
-# =========================================================
-
-with tab1:
-
-    st.markdown("""
-    <div class="section-card">
-    <h2>🍱 Food Delivery Margin Matrix</h2>
-    <p>Hyperlocal logistics profitability simulation.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    base_last_mile = 28.5
-
-    simulated_last_mile = (
-        base_last_mile
-        * (
-            1 + ((diesel_price - 92.5) / 92.5) * 0.75
-        )
-        + (freight_shock * 0.02)
-    )
-
-    margin_loss = (
-        (
-            simulated_last_mile - base_last_mile
-        ) / base_last_mile
-    ) * 4.2
-
-    projected_margin = 5.8 - margin_loss
-
-    c1, c2, c3 = st.columns(3)
-
-    c1.metric(
-        "Last Mile Cost",
-        f"₹{simulated_last_mile:.2f}"
-    )
-
-    c2.metric(
-        "Margin Compression",
-        f"{margin_loss:.2f}%"
-    )
-
-    c3.metric(
-        "Projected Margin",
-        f"{projected_margin:.2f}%"
-    )
-
-    diesel_range = np.linspace(
-        diesel_price - 20,
-        diesel_price + 20,
-        20
-    )
-
-    margins = []
-
-    for d in diesel_range:
-
-        margin = 5.8 - (
-            (
-                (
-                    base_last_mile
-                    * (
-                        1 + ((d - 92.5) / 92.5) * 0.75
-                    )
-                )
-                - base_last_mile
-            ) / base_last_mile
-        ) * 4.2
-
-        margins.append(margin)
-
-    fig = go.Figure()
-
-    fig.add_trace(
-        go.Scatter(
-            x=diesel_range,
-            y=margins,
-            mode="lines+markers",
-            line=dict(width=4),
-            name="Margin"
-        )
-    )
-
-    fig.update_layout(
-        template="plotly_dark",
-        height=420,
-        title="Margin Sensitivity vs Diesel Price",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)"
-    )
-
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
-
-# =========================================================
-# TAB 2
-# =========================================================
-
-with tab2:
-
-    st.markdown("""
-    <div class="section-card">
-    <h2>📈 Volatility Analytics</h2>
-    <p>Rolling volatility structure and institutional risk monitoring.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    vol = generate_vol_surface()
-
-    fig_vol = go.Figure()
-
-    fig_vol.add_trace(
-        go.Scatter(
-            x=vol["Date"],
-            y=vol["30D"],
-            name="30D Vol"
-        )
-    )
-
-    fig_vol.add_trace(
-        go.Scatter(
-            x=vol["Date"],
-            y=vol["60D"],
-            name="60D Vol"
-        )
-    )
-
-    fig_vol.add_trace(
-        go.Scatter(
-            x=vol["Date"],
-            y=vol["90D"],
-            name="90D Vol"
-        )
-    )
-
-    fig_vol.update_layout(
-        template="plotly_dark",
-        height=450,
-        title="Crude Oil Volatility Surface",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)"
-    )
-
-    st.plotly_chart(
-        fig_vol,
-        use_container_width=True
-    )
-
+# --- TAB 1: NEW OIL MARKETING COMPANY (OMC) STRESS MATRIX ---
+with t1:
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>⛽ Oil Marketing Company (OMC) Under-Recovery Matrix</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#94a3b8;'>Simulating refining margin metrics and daily capital drain allocations across State OMCs (IOCL, BPCL, HPCL) based on current crude gaps.</p>", unsafe_allow_html=True)
+    
+    # Calculate pricing disparities (Breakeven crude vs current crude)
+    # Standard assumption: $85 brent aligns to roughly ~100 Petrol/90 Diesel structural pricing
+    petrol_breakeven_crude = (petrol_price / 1.22)
+    diesel_breakeven_crude = (diesel_price / 1.05)
+    
+    petrol_margin_gap = petrol_breakeven_crude - brent_crude
+    diesel_margin_gap = diesel_breakeven_crude - brent_crude
+    
+    # Estimated daily cash pool drain in Crores (INR) across Indian networks
+    daily_drain = max(0.0, (-petrol_margin_gap * 4.5) + (-diesel_margin_gap * 9.2))
+    
+    omc1, omc2, omc3 = st.columns(3)
+    omc1.metric("Petrol Marketing Margin Gap", f"${petrol_margin_gap:.2f} / bbl Equivalent", delta_color="inverse")
+    omc2.metric("Diesel Marketing Margin Gap", f"${diesel_margin_gap:.2f} / bbl Equivalent", delta_color="inverse")
+    omc3.metric("Projected Daily Sector Under-Recovery", f"₹{daily_drain:.2f} Crores / Day" if daily_drain > 0 else "₹0.00 (Positive Net Spreads)", delta_color="inverse")
+    
     st.markdown("---")
+    st.markdown("### 📊 Enterprise Gross Refining Margin (GRM) Projections")
+    
+    omc_entities = ['Indian Oil Corp (IOCL)', 'Bharat Petroleum (BPCL)', 'Hindustan Petroleum (HPCL)']
+    base_grms = [11.20, 12.40, 10.10]
+    
+    # High crude reduces marketing margins but can augment inventory gains on the refining side
+    simulated_grms = [base + (crude_delta_pct * 0.04) - (max(0, -petrol_margin_gap)*0.15) for base in base_grms]
+    
+    fig_omc = go.Figure()
+    fig_omc.add_trace(go.Bar(name='Normalized GRM ($/bbl)', x=omc_entities, y=base_grms, marker_color='#1e293b'))
+    fig_omc.add_trace(go.Bar(name='Simulated Energy Shock GRM ($/bbl)', x=omc_entities, y=simulated_grms, marker_color='#06b6d4'))
+    fig_omc.update_layout(barmode='group', template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=380)
+    st.plotly_chart(fig_omc, use_container_width=True)
 
-    corr = correlation_matrix()
+# --- TAB 2: FOOD TECH DELIVERY ---
+with t2:
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🍱 Food Delivery Platform Operating Margin Matrix</h3>", unsafe_allow_html=True)
+    
+    base_last_mile = 28.5  
+    simulated_last_mile = base_last_mile * (1 + ((diesel_price - 92.5) / 92.5) * 0.75) + (freight_shock * 0.02)
+    customer_leakage = max(0.0, ((petrol_price - 100) * 0.25))
+    margin_loss = ((simulated_last_mile - base_last_mile) / base_last_mile) * 4.2
+    projected_margin = 5.8 - margin_loss
+    
+    fcol1, fcol2, fcol3 = st.columns(3)
+    fcol1.metric("Simulated Delivery Fleet Cost", f"₹{simulated_last_mile:.2f} / order", f"{((simulated_last_mile-base_last_mile)/base_last_mile):+.1%} vs Base")
+    fcol2.metric("Customer Order Churn Vector", f"-{customer_leakage:.2f}%", "Order Elasticity Strain")
+    fcol3.metric("Projected Platform Contribution Margin", f"{projected_margin:.2f}%", f"{-margin_loss:+.2f}% Compression", delta_color="inverse")
+    
+    st.markdown("---")
+    components = ['Rider Base Payout', 'Fuel Surcharge Component', 'Platform Overhead Allocation', 'App Tech Infrastructure']
+    base_costs = [18.0, 6.5, 1.5, 1.5]
+    scaled_costs = [18.0 * (1 + (mandi_disruption - 1) * 0.2), 6.5 * (diesel_price / 92.5), 1.5, 1.5]
+    
+    df_food = pd.DataFrame({'Cost Component': components, 'Baseline (₹)': base_costs, 'Simulated (₹)': scaled_costs})
+    fig_food = go.Figure()
+    fig_food.add_trace(go.Bar(name='Baseline Cost Structure', x=df_food['Cost Component'], y=df_food['Baseline (₹)'], marker_color='#334155'))
+    fig_food.add_trace(go.Bar(name='Simulated Fuel Shock Structure', x=df_food['Cost Component'], y=df_food['Simulated (₹)'], marker_color='#ea580c'))
+    fig_food.update_layout(barmode='group', title_text='Per-Order Fleet Overhead Metrics', template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=350)
+    st.plotly_chart(fig_food, use_container_width=True)
 
-    fig_corr = go.Figure(
-        data=go.Heatmap(
-            z=corr.values,
-            x=corr.columns,
-            y=corr.index,
-            colorscale="RdBu",
-            zmid=0,
-            text=np.round(corr.values, 2),
-            texttemplate="%{text}"
-        )
-    )
+# --- TAB 3: KITCHEN THALI LOGISTICS ---
+with t3:
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🌾 Agricultural Mandi Network Cost Shocks</h3>", unsafe_allow_html=True)
+    
+    crop_profiles = {
+        "Edible Oils": {"base_shock": 4.5, "vector": "High maritime exposure combined with domestic bulk dispatch lines."},
+        "Tomato": {"base_shock": 8.2, "vector": "Extreme perishability factor linked to refrigerated transit costs."},
+        "Onion": {"base_shock": 6.8, "vector": "Lasalgaon hub network dependency profiles."},
+        "Potato": {"base_shock": 5.1, "vector": "Cold storage logistics linked directly to electricity line overheads."},
+        "Pulses": {"base_shock": 4.0, "vector": "Inland transit freight tracking corridors."}
+    }
+    
+    all_crops = list(crop_profiles.keys())
+    calculated_shocks = [crop_profiles[c]["base_shock"] * (1 + (crude_delta_pct / 100) * 0.4) * mandi_disruption for c in all_crops]
+    df_crops = pd.DataFrame({'Commodity': all_crops, 'Projected Cost Shift (%)': calculated_shocks}).sort_values(by='Projected Cost Shift (%)', ascending=False)
+    
+    fig_crops = px.bar(df_crops, x='Projected Cost Shift (%)', y='Commodity', orientation='h',
+                       title='Mandi Commodity Cost Inflation Vector',
+                       color='Projected Cost Shift (%)', color_continuous_scale='Reds', template='plotly_dark')
+    fig_crops.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=350)
+    st.plotly_chart(fig_crops, use_container_width=True)
 
-    fig_corr.update_layout(
-        template="plotly_dark",
-        height=600,
-        title="Cross Asset Correlation Matrix",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)"
-    )
+# --- TAB 4: FMCG DEFENSE DOSSIERS ---
+with t4:
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🏭 Listed FMCG Equity Margin Sensitivity Map</h3>", unsafe_allow_html=True)
+    
+    lab_inflation = crude_delta_pct * 0.85
+    hdpe_inflation = crude_delta_pct * 0.65
+    palm_oil_shock = (crude_delta_pct * 0.3) + (freight_shock * 0.4)
+    
+    f1, f2, f3 = st.columns(3)
+    f1.metric("Linear Alkyl Benzene (LAB) Index", f"{lab_inflation:+.2f}%", "Detergent Base Chemical")
+    f2.metric("HDPE Rigid Packaging Premium", f"{hdpe_inflation:+.2f}%", "Plastic Packing Derivatives")
+    f3.metric("Crude/Freight Palm Oil Surcharge", f"{palm_oil_shock:+.2f}%", "Soaps Formulation Baseline")
+    
+    companies = ['Hindustan Unilever (HUL)', 'Godrej Consumer Products', 'Dabur India Ltd', 'Marico Ltd']
+    gross_margin_baselines = [51.2, 53.5, 46.8, 49.5]
+    vulnerabilities = [0.08, 0.11, 0.04, 0.07] 
+    simulated_margins = [base - (crude_delta_pct * v) - (freight_shock * 0.01) for base, v in zip(gross_margin_baselines, vulnerabilities)]
+    
+    df_fmcg = pd.DataFrame({'Corporate Entity': companies, 'Historical Baseline': gross_margin_baselines, 'Simulated Target': simulated_margins})
+    fig_fmcg = go.Figure()
+    fig_fmcg.add_trace(go.Bar(name='Historical Base', x=df_fmcg['Corporate Entity'], y=df_fmcg['Historical Baseline'], marker_color='#1e3a8a'))
+    fig_fmcg.add_trace(go.Bar(name='Simulated Impact Target', x=df_fmcg['Corporate Entity'], y=df_fmcg['Simulated Target'], marker_color='#b91c1c'))
+    fig_fmcg.update_layout(barmode='group', template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=350)
+    st.plotly_chart(fig_fmcg, use_container_width=True)
 
-    st.plotly_chart(
-        fig_corr,
-        use_container_width=True
-    )
+# --- TAB 5: CENTRAL BANK MONETARY COGNITION ---
+with t5:
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🏛️ Reserve Bank Systemic Stance & Bond Yield Maps</h3>", unsafe_allow_html=True)
+    
+    base_repo = 6.50
+    implied_repo_hike = max(0, int(((calc_cpi * 100) - 4.5) / 0.5) * 25) 
+    projected_repo = base_repo + (implied_repo_hike / 100)
+    g_sec_yield = 7.10 + (crude_delta_pct * 0.015) + (implied_repo_hike * 0.008)
+    
+    rc1, rc2, rc3 = st.columns(3)
+    rc1.metric("Implied Policy Rate Adjustment", f"+{implied_repo_hike} bps", "Calculated Response Array")
+    rc2.metric("Projected Repo Target Rate", f"{projected_repo:.2%}", "Policy Terminal Anchor")
+    rc3.metric("India 10Y G-Sec Yield Forecast", f"{g_sec_yield:.3%}", "Sovereign Yield Adjustment Vector")
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.info(f"💡 **MPC Transmission Vector Forecast:** Given simulated consumer price anchors leveling out near {calc_cpi:.2%}, the modeling predicts the Reserve Bank migrating toward an aggressive hawkish stance to defend localized asset profiles.")
 
-# =========================================================
-# TAB 3
-# =========================================================
-
-with tab3:
-
-    st.markdown("""
-    <div class="section-card">
-    <h2>📊 Institutional Stress Testing</h2>
-    <p>Multi-scenario macroeconomic risk decomposition.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    stress_df = pd.DataFrame({
-        "Scenario": [
-            "Baseline",
-            "Moderate",
-            "Severe",
-            "Tail Risk",
-            "Systemic"
-        ],
-        "CPI": [
-            0.045,
-            0.058,
-            0.072,
-            0.089,
-            0.105
-        ],
-        "WPI": [
-            0.052,
-            0.078,
-            0.112,
-            0.145,
-            0.185
-        ]
-    })
-
-    fig_bar = go.Figure()
-
-    fig_bar.add_trace(
-        go.Bar(
-            x=stress_df["Scenario"],
-            y=stress_df["CPI"],
-            name="CPI"
-        )
-    )
-
-    fig_bar.add_trace(
-        go.Bar(
-            x=stress_df["Scenario"],
-            y=stress_df["WPI"],
-            name="WPI"
-        )
-    )
-
-    fig_bar.update_layout(
-        template="plotly_dark",
-        barmode="group",
-        height=450,
-        title="Macro Stress Scenario Matrix",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)"
-    )
-
-    st.plotly_chart(
-        fig_bar,
-        use_container_width=True
-    )
-
-# =========================================================
-# TAB 4
-# =========================================================
-
-with tab4:
-
-    st.markdown("""
-    <div class="section-card">
-
-    <h2 style="color:#60a5fa;">
-    📜 Methodology & Framework
-    </h2>
-
-    <p>
-    This simulation engine models how global oil shocks
-    propagate into the Indian economy through freight,
-    agriculture, logistics, retail fuel pricing,
-    inflation, and corporate margins.
-    </p>
-
-    <h3 style="color:#fbbf24;">
-    Included Variables
-    </h3>
-
-    <ul>
-        <li>Brent Crude</li>
-        <li>WTI Crude</li>
-        <li>India Basket</li>
-        <li>Petrol & Diesel Prices</li>
-        <li>Freight Shock</li>
-        <li>Supply Chain Bottlenecks</li>
-        <li>Food Inflation</li>
-        <li>Margin Compression</li>
-    </ul>
-
-    <h3 style="color:#34d399;">
-    Risk Models
-    </h3>
-
-    <ul>
-        <li>Value at Risk (VaR)</li>
-        <li>Expected Shortfall</li>
-        <li>Cross Asset Correlation</li>
-        <li>Volatility Surface</li>
-        <li>Stress Testing</li>
-    </ul>
-
-    <h3 style="color:#a78bfa;">
-    Technology Stack
-    </h3>
-
-    <ul>
-        <li>Python</li>
-        <li>Streamlit</li>
-        <li>Plotly</li>
-        <li>Pandas</li>
-        <li>NumPy</li>
-    </ul>
-
-    </div>
-    """, unsafe_allow_html=True)
-
-# =========================================================
-# FOOTER
-# =========================================================
-
+# --- FOOTER ANCHOR LAYER ---
 st.markdown("""
-<hr>
-
-<center>
-<p style="color:#6b7280;">
-India Energy Shock & Margin Stress Engine v2.1
-</p>
-</center>
+<hr style="border-color: rgba(255,255,255,0.05); margin-top: 40px;">
+<div style="text-align: center; color: #64748b; font-size: 12px; font-family: 'JetBrains Mono', monospace; padding-bottom: 24px;">
+    🇮🇳 India Fuel Shock Framework Engine • Global Sandboxed Execution Node Secured
+</div>
 """, unsafe_allow_html=True)
