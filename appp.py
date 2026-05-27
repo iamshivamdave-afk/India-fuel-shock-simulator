@@ -97,15 +97,15 @@ st.markdown("<p style='color:#9ca3af; font-size:0.9rem;'>Simulating input cost p
 
 m_col1, m_col2, m_col3, m_col4, m_col5, m_col6 = st.columns(6)
 with m_col1:
-    st.markdown(f"<div class='metric-card'><span style='color:#9ca3af;font-size:0.8rem;'>Projected CPI Inflation</span><br><span style='font-size:1.6rem;font-weight:700;'>{cpi_projected:.2%}\</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='metric-card'><span style='color:#9ca3af;font-size:0.8rem;'>Projected CPI Inflation</span><br><span style='font-size:1.6rem;font-weight:700;'>{cpi_projected:.2f}%</span></div>", unsafe_allow_html=True)
 with m_col2:
-    st.markdown(f"<div class='metric-card'><span style='color:#9ca3af;font-size:0.8rem;'>Projected Wholesale WPI</span><br><span style='font-size:1.6rem;font-weight:700;'>{wpi_projected:.2%}\</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='metric-card'><span style='color:#9ca3af;font-size:0.8rem;'>Projected Wholesale WPI</span><br><span style='font-size:1.6rem;font-weight:700;'>{wpi_projected:.2f}%</span></div>", unsafe_allow_html=True)
 with m_col3:
     st.markdown(f"<div class='metric-card'><span style='color:#9ca3af;font-size:0.8rem;'>Baseline Fuel Weight</span><br><span style='font-size:1.6rem;font-weight:700;'>24.71%</span></div>", unsafe_allow_html=True)
 with m_col4:
     st.markdown(f"<div class='metric-card'><span style='color:#9ca3af;font-size:0.8rem;'>Crude Elasticity Anchor</span><br><span style='font-size:1.6rem;font-weight:700;'>67.20%</span></div>", unsafe_allow_html=True)
 with m_col5:
-    st.markdown(f"<div class='metric-card'><span style='color:#9ca3af;font-size:0.8rem;'>Household Thali Index</span><br><span style='font-size:1.6rem;font-weight:700;color:#f87171;'>+{thali_index_pct:.1%}\</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='metric-card'><span style='color:#9ca3af;font-size:0.8rem;'>Household Thali Index</span><br><span style='font-size:1.6rem;font-weight:700;color:#f87171;'>+{thali_index_pct:.1f}%</span></div>", unsafe_allow_html=True)
 with m_col6:
     st.markdown(f"<div class='metric-card'><span style='color:#9ca3af;font-size:0.8rem;'>System Risk Matrix State</span><br><span style='font-size:1rem;font-weight:700;color:{risk_color};'>{risk_state}</span></div>", unsafe_allow_html=True)
 
@@ -174,7 +174,7 @@ with tabs[2]:
         * **Grammage Reduction Strategy (Shrinkflation):** Pack sizes for entry-level price points (₹5/₹10 stock keeping units) are modeled to scale down by **8.4%** to preserve price anchors.
         """)
 
-# ================= NEW TAB 4: EDIBLE OIL IMPORT SHOCK & INDIAN KITCHEN INFLATION =================
+# ================= TAB 4: EDIBLE OIL IMPORT SHOCK & INDIAN KITCHEN INFLATION =================
 with tabs[3]:
     st.markdown("### 🌻 Edible Oil Import Shock & Indian Kitchen Inflation Module")
     st.markdown("<p style='color:#9ca3af;'>Simulating international market transmission channels (Biofuel loops, Ocean freight spikes) cascading into domestic Indian consumer baskets.</p>", unsafe_allow_html=True)
@@ -206,8 +206,8 @@ with tabs[3]:
         ocean_freight = 45.0 + (hormuz_scale * 9.5)
         insurance_handling = 12.0
         base_cif = fob_base + ocean_freight + insurance_handling
-        import_duty_cess = base_cif * 0.055 # 5.5% effective Basic Customs Duty + Social Welfare Cess
-        landed_inr_wholesale = (base_cif + import_duty_cess) * 83.5 / 10 # Convert to Quintal Scale (per 100kg)
+        import_duty_cess = base_cif * 0.055
+        landed_inr_wholesale = (base_cif + import_duty_cess) * 83.5 / 10
         
         fig_waterfall = go.Figure(go.Waterfall(
             name="CPO Import Costing",
@@ -226,11 +226,10 @@ with tabs[3]:
         
     with oil_col2:
         st.markdown("#### 🗺️ Structural Trade Corridors to Indian Discharge Infrastructure")
-        # Sankey Flow representation mapping Origins -> Hub Indian Ports -> Refinery Chains
         labels = ["SE Asia (Palm)", "South America (Soy)", "Black Sea (Sun)", "Kandla Port", "Mundra Port", "JNPT Port", "Refining Complexes", "Domestic Markets"]
         source = [0, 0, 1, 1, 2, 3, 4, 5, 6]
         target = [3, 4, 4, 5, 3, 6, 6, 6, 7]
-        value =  [35, 15, 15, 10, 15, 50, 25, 15, 90] # Percentage volumetric assignments
+        value =  [35, 15, 15, 10, 15, 50, 25, 15, 90]
         
         fig_sankey = go.Figure(data=[go.Sankey(
             node = dict(
@@ -256,7 +255,6 @@ with tabs[3]:
         st.markdown("#### 🛒 Domestic Substitution Transmission Matrix")
         st.markdown("<p style='color:#9ca3af; font-size:0.85rem;'>As import landed costs spike, domestic seed oils face extreme substitution pressures, pushing up domestic prices even without local crop deficits.</p>", unsafe_allow_html=True)
         
-        # Transmission Matrix calculations
         oil_variants = ["Refined Palm Oil", "Crude Soybean Oil", "Imported Sunflower", "Domestic Mustard Oil", "Groundnut Oil", "Rice Bran Oil"]
         base_retail = [105, 122, 130, 145, 175, 115]
         transmission_factor = [1.0, 0.92, 0.88, 0.72, 0.50, 0.82]
@@ -275,12 +273,9 @@ with tabs[3]:
         
     with oil_col4:
         st.markdown("#### 📊 Household Multi-Tier Stress Heatmap Analysis")
-        
-        # Dynamic Risk Heatmap generation across Macro-Scenarios
         scenarios = ["Baseline Flow", "Moderate Surcharge", "Severe Disruption", "Hormuz Fleet Blockade"]
         segments = ["EWS (<₹3L/yr)", "Lower Mid (₹3L-8L/yr)", "Upper Mid (₹8L-18L/yr)", "High Net Worth (>18L)"]
         
-        # Calculate dynamic absolute monthly budget impacts in INR based on Brent and Freight sliders
         base_matrix = np.array([
             [120, 45, 20, 5],
             [280, 110, 55, 15],
@@ -312,7 +307,7 @@ with tabs[4]:
         else:
             st.success("✅ STABLE STANCE: CPI inflation remains inside the 2.00% - 6.00% legal monitoring framework.")
             
-        rate_hike_prob = min(100, max(0, int((cpi_projected - 4.0) * 200)))
+        rate_hike_prob = min(100, max(0, int((cpi_projected - 4.0) * 20)))
         st.metric("Modeled Yield Rate Hike Probability (Next Policy Cycle)", f"{rate_hike_prob}%")
     with col_t5_2:
         st.markdown("#### Systemic Liquidity Profile")
@@ -334,6 +329,5 @@ with tabs[5]:
     
     #### 4. Edible Oil Biofuel Loop & Parity Formula Anchor
     $$CPO_{futures} = Base_{FOB} + (\Delta Brent \times 3.8) + (Scale_{Hormuz} \times 14.0)$$
-    
     """)
     st.info("VERIFICATION MATRIX SECURITIES SYSTEM ENCRYPTED // END OF PIPELINE BUILD MODULE")
