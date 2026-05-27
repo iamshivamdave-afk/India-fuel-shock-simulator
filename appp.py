@@ -156,17 +156,62 @@ m6.metric("System Risk Matrix State", macro_regime)
 st.markdown("---")
 
 # --- PRODUCTION TABS INTERFACE ---
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "🍱 Kitchen Thali Logistics Engine",
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+    "🍱 Food Tech Delivery Index",
+    "🌾 Kitchen Thali Logistics Engine",
     "🏢 FMCG Defense Dossiers",
     "🗺️ Maritime Sourcing Maps",
-    " Bars NSE Capital Realization",
+    "📊 NSE Capital Realization",
     "🏦 Monetary Intervention Stance",
     "🧮 Behind The Math"
 ])
 
-# --- TAB 1: KITCHEN THALI LOGISTICS ---
+# --- TAB 1: FOOD TECH DELIVERY INDEX ---
 with tab1:
+    st.subheader("🛵 Food Tech & Quick Commerce Last-Mile Shock Matrix")
+    st.markdown("""
+    Simulating the impact of fuel surges on last-mile delivery economics, gig-worker payouts, and immediate contribution margin compressions.
+    """)
+    
+    rider_payout_delta = round((petrol_shock * 0.45) + (inr_depr * 0.1), 2)
+    delivery_burn = round(2.1 + (petrol_shock * 0.08), 2)
+    
+    ft_companies = ["Zomato (Food Delivery)", "Swiggy (Food Delivery)", "Blinkit (Quick Commerce)", "Instamart (Quick Commerce)"]
+    gig_inflation = [rider_payout_delta, rider_payout_delta * 0.95, rider_payout_delta * 1.15, rider_payout_delta * 1.10]
+    margin_impact = [delivery_burn, delivery_burn * 1.05, delivery_burn * 1.30, delivery_burn * 1.25]
+    
+    ft_df = pd.DataFrame({
+        "Platform Segment": ft_companies,
+        "Rider Fuel Payout Escalation (%)": np.clip(gig_inflation, 0.0, 40.0).round(2),
+        "Contribution Margin Drag (% of AOV)": np.clip(margin_impact, 0.0, 15.0).round(2)
+    })
+    
+    col_ft1, col_ft2 = st.columns([5, 4])
+    with col_ft1:
+        fig_ft = px.bar(
+            ft_df, x="Platform Segment", y="Rider Fuel Payout Escalation (%)",
+            color="Contribution Margin Drag (% of AOV)", text="Rider Fuel Payout Escalation (%)",
+            template="plotly_dark", color_continuous_scale="Reds"
+        )
+        fig_ft.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig_ft, width='stretch')
+        
+    with col_ft2:
+        st.markdown("#### 📊 Delivery Operational Breakdown")
+        st.dataframe(ft_df, width='stretch', hide_index=True)
+        st.markdown(f"""
+        <div class="dossier-card" style="border-left-color: #ef4444;">
+            <h3 style="margin-top:0; color:#ef4444;">⚠️ QUICK COMMERCE INFLATION SQUEEZE</h3>
+            <p style="color:#e2e8f0; font-size:13px; line-height:1.5;">
+                Quick Commerce networks (Blinkit / Instamart) display a significantly higher fuel shock vulnerability than traditional food delivery segments due to higher hyper-local route density and strict delivery runtime timelines.
+            </p>
+            <hr style="border-color:#1e293b; margin:12px 0;">
+            <p style="margin:0;"><b>Est. Delivery Payout Surge Per Order:</b> <span style="color:#ef4444; font-weight:bold;">₹{(petrol_shock * 0.18):.2f}</span></p>
+        </div>
+        """, unsafe_allow_html=True)
+
+# --- TAB 2: KITCHEN THALI LOGISTICS ---
+with tab2:
     st.subheader("🌾 Agricultural Supply Chain Shock & Inter-State Bottlenecks")
     
     commodities = ["Tomato", "Edible Oils", "Onion", "Potato", "Poultry Feed", "Milk", "Pulses", "Sugar", "Rice", "Wheat"]
@@ -180,7 +225,6 @@ with tab1:
     
     col_ag1, col_ag2 = st.columns([5, 4])
     with col_ag1:
-        # Fixed colorscale compilation issue by swapping 'Coolwarm' to valid 'Oranges'
         fig_agri = px.bar(
             agri_df.sort_values("Projected Cost Shift (%)"),
             x="Projected Cost Shift (%)", y="Commodity", orientation="h",
@@ -191,7 +235,7 @@ with tab1:
         st.plotly_chart(fig_agri, width='stretch')
         
     with col_ag2:
-        st.markdown("🔍 **Sub-Layering: Mandi Supply Chain Inspector**")
+        st.markdown("🔍 **Mandi Supply Chain Inspector**")
         selected_agri = st.selectbox("Select a core food component to inspect structural pipeline risk:", commodities)
         
         profiles = {
@@ -216,8 +260,8 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-# --- TAB 2: FMCG DEFENSE DOSSIERS ---
-with tab2:
+# --- TAB 3: FMCG DEFENSE DOSSIERS ---
+with tab3:
     st.subheader("📋 Listed FMCG Corporate Matrix & Structural Actions")
     
     companies = ["HUL", "Nestle India", "Britannia", "Dabur", "Marico", "ITC FMCG"]
@@ -236,8 +280,8 @@ with tab2:
     })
     st.dataframe(fmcg_df, width='stretch', hide_index=True)
 
-# --- TAB 3: MARITIME SOURCING MAPS ---
-with tab3:
+# --- TAB 4: MARITIME SOURCING MAPS ---
+with tab4:
     st.subheader("⚓ Global Maritime Strategic Chokepoints & Insurance Add-ons")
     st.markdown(f"""
     <div class="dossier-card">
@@ -248,8 +292,8 @@ with tab3:
     </div>
     """, unsafe_allow_html=True)
 
-# --- TAB 4: NSE CAPITAL REALIZATION ---
-with tab4:
+# --- TAB 5: NSE CAPITAL REALIZATION ---
+with tab5:
     st.subheader("📊 Sectoral Equity Revisions & Structural Outflows")
     
     market_df = pd.DataFrame({
@@ -257,7 +301,6 @@ with tab4:
         "EPS Revision Trajectory (%)": [16.4, 12.8, 4.2, -18.5, -12.1, -7.4]
     })
     
-    # Swapped faulty 'Coolwarm' to fully standard 'RdBu' 
     fig_market = px.bar(
         market_df, x="Listed Corporation", y="EPS Revision Trajectory (%)",
         color="EPS Revision Trajectory (%)", template="plotly_dark",
@@ -266,8 +309,8 @@ with tab4:
     fig_market.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig_market, width='stretch')
 
-# --- TAB 5: MONETARY INTERVENTION STANCE ---
-with tab5:
+# --- TAB 6: MONETARY INTERVENTION STANCE ---
+with tab6:
     st.subheader("Reserve Bank of India Monetary Policy Transmission Framework")
     col_cb1, col_cb2 = st.columns([4, 5])
     
@@ -303,8 +346,8 @@ with tab5:
         fig_rbi.update_yaxes(title_text="India 10Y GBOND Yield (%)", secondary_y=True, showgrid=False)
         st.plotly_chart(fig_rbi, width='stretch')
 
-# --- TAB 6: PROPAGATION EQUATION SCHEMAS ---
-with tab6:
+# --- TAB 7: PROPAGATION EQUATION SCHEMAS ---
+with tab7:
     st.subheader("🧮 Integrated Logistical Transmission Formulas")
     st.markdown("""
     <div class="math-card">
