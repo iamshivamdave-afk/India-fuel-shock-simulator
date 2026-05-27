@@ -131,7 +131,7 @@ div[data-testid="stMetricContainer"] {
     padding: 10px;
 }
 </style>
-""", unsafe_value=True)
+""", unsafe_allow_html=True)
 
 # --- LIVE BROADCAST TICKER LAYER ---
 st.markdown(f"""
@@ -144,7 +144,7 @@ st.markdown(f"""
         <span class="ticker-item">⚡ MACRO TRANSMISSION MODEL TIER-1 VERIFIED</span>
     </div>
 </div>
-""", unsafe_value=True)
+""", unsafe_allow_html=True)
 
 # --- APPLICATION HEADER ---
 st.markdown("""
@@ -153,13 +153,13 @@ st.markdown("""
     <h2 style="margin: 6px 0 4px 0; color: #ffffff; font-weight: 8px;">🇮🇳 India Energy Shock & Margin Stress Engine</h2>
     <p style="color: #9ca3af; margin: 0; font-size: 12px;">Simulating input cost propagation vectors, retail food shocks, and listed equity margin compression maps across sub-continental trade networks.</p>
 </div>
-""", unsafe_value=True)
+""", unsafe_allow_html=True)
 
 # --- SIDEBAR INTERFACE (CONTROL DECK) ---
 with st.sidebar:
-    st.markdown("<h4 style='color: #ffffff; margin-bottom: 12px;'>Simulation Control Deck</h4>", unsafe_value=True)
+    st.markdown("<h4 style='color: #ffffff; margin-bottom: 12px;'>Simulation Control Deck</h4>", unsafe_allow_html=True)
     
-    st.markdown("<p style='color:#9ca3af; font-size:11px; margin-bottom:2px;'>MANUAL BENCHMARK CONFIGURATION</p>", unsafe_value=True)
+    st.markdown("<p style='color:#9ca3af; font-size:11px; margin-bottom:2px;'>MANUAL BENCHMARK CONFIGURATION</p>", unsafe_allow_html=True)
     
     # Sliders initialize dynamically linked directly to our live fetched values!
     brent_crude = st.slider("Brent Crude Reference ($/bbl)", 40.0, 180.0, float(live_brent), 0.5)
@@ -167,12 +167,12 @@ with st.sidebar:
     diesel_price = st.slider("Domestic Retail Diesel (INR/L)", 60.0, 150.0, 92.5, 0.5)
     
     st.markdown("---")
-    st.markdown("<p style='color:#9ca3af; font-size:11px; margin-bottom:2px;'>SUPPLY CHAIN DISRUPTION CONTROLS</p>", unsafe_value=True)
+    st.markdown("<p style='color:#9ca3af; font-size:11px; margin-bottom:2px;'>SUPPLY CHAIN DISRUPTION CONTROLS</p>", unsafe_allow_html=True)
     freight_shock = st.slider("Global Maritime Freight Premium (%)", 0, 300, 45, 5)
     mandi_disruption = st.slider("Domestic Transit Bottleneck Coeff", 1.0, 2.5, 1.15, 0.05)
     
     st.markdown("---")
-    st.markdown("<p style='color:#9ca3af; font-size:11px; margin-bottom:2px;'>MACRO TRANSMISSION COEFFICIENTS</p>", unsafe_value=True)
+    st.markdown("<p style='color:#9ca3af; font-size:11px; margin-bottom:2px;'>MACRO TRANSMISSION COEFFICIENTS</p>", unsafe_allow_html=True)
     fertilizer_pass_thru = st.slider("Fertilizer Subsidy Absorbtion (%)", 0, 100, 65, 5)
 
 # --- INTERMEDIATE CALCULATIONS ENGINE ---
@@ -206,9 +206,9 @@ with m6:
         <p style='color: {state_color}; margin: 2px 0; font-size: 12px; font-weight: bold;'>{system_state}</p>
         <div style='width: 10px; height: 10px; background-color: {state_color}; border-radius: 50%; display: inline-block;'></div>
     </div>
-    """, unsafe_value=True)
+    """, unsafe_allow_html=True)
 
-st.markdown("<br>", unsafe_value=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
 # --- WORKSPACE TABS INTERFACE ---
 t1, t2, t3, t4, t5, t6, t7 = st.tabs([
@@ -223,8 +223,8 @@ t1, t2, t3, t4, t5, t6, t7 = st.tabs([
 
 # --- TAB 1: NEW INTERACTIVE FOOD TECH SYSTEM ---
 with t1:
-    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🍱 Food Delivery Platform Operating Margin Matrix</h3>", unsafe_value=True)
-    st.markdown("<p style='color:#9ca3af;'>Analyzing structural unit economics for major hyper-local network applications (Zomato, Swiggy) under active fuel price stress.</p>", unsafe_value=True)
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🍱 Food Delivery Platform Operating Margin Matrix</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#9ca3af;'>Analyzing structural unit economics for major hyper-local network applications (Zomato, Swiggy) under active fuel price stress.</p>", unsafe_allow_html=True)
     
     # Compute metrics specific to logistics platforms
     base_last_mile = 28.5  # Base last mile cost in INR per order
@@ -263,7 +263,7 @@ with t1:
 
 # --- TAB 2: KITCHEN THALI LOGISTICS ---
 with t2:
-    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🌾 Agricultural Supply Chain Shock & Inter-State Bottlenecks</h3>", unsafe_value=True)
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🌾 Agricultural Supply Chain Shock & Inter-State Bottlenecks</h3>", unsafe_allow_html=True)
     
     show_mandi = st.checkbox("Sub-Layering: Mandi Supply Chain Inspector", value=True)
     
@@ -309,19 +309,19 @@ with t2:
                 <hr style="border-color: #1f2937;">
                 <h3 style="color: #ea580c; margin: 10px 0 0 0;">Current Simulated Pipeline Inflation: {current_crop_shock:.2f}%</h3>
             </div>
-            """, unsafe_value=True)
+            """, unsafe_allow_html=True)
 
 # --- TAB 3: FMCG DEFENSE DOSSIERS ---
 with t3:
-    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🏭 FMCG Listed Equity Gross Margin Sensitivity Analysis</h3>", unsafe_value=True)
-    st.markdown("<p style='color:#9ca3af;'>Simulating compression vectors across major listed consumer staples sectors where crude derivative inputs (Linear Alkyl Benzene, HDPE packaging, global freight loads) dictate profitability thresholds.</p>", unsafe_value=True)
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🏭 FMCG Listed Equity Gross Margin Sensitivity Analysis</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#9ca3af;'>Simulating compression vectors across major listed consumer staples sectors where crude derivative inputs (Linear Alkyl Benzene, HDPE packaging, global freight loads) dictate profitability thresholds.</p>", unsafe_allow_html=True)
     
     # Modeling raw material inflation indexes based on our sidebar crude levels
     lab_inflation = crude_delta_pct * 0.85
     hdpe_inflation = crude_delta_pct * 0.65
     palm_oil_shock = (crude_delta_pct * 0.3) + (freight_shock * 0.4)
     
-    st.markdown("<br>", unsafe_value=True)
+    st.markdown("<br>", unsafe_allow_html=True)
     f1, f2, f3 = st.columns(3)
     f1.metric("Linear Alkyl Benzene (LAB) Index", f"{lab_inflation:+.2f}%", "Detergent Base Chemical")
     f2.metric("HDPE Rigid Packaging Premium", f"{hdpe_inflation:+.2f}%", "Plastic Containers/Wrappers")
@@ -351,13 +351,13 @@ with t3:
 
 # --- TAB 4: MARITIME SOURCING MAPS ---
 with t4:
-    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🚢 Maritime Import Channels & Surcharge Models</h3>", unsafe_value=True)
-    st.markdown("<p style='color:#9ca3af;'>Evaluating landing premiums across critical oceanic inbound container channels into western coastal ports (Nhava Sheva, Mundra).</p>", unsafe_value=True)
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🚢 Maritime Import Channels & Surcharge Models</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#9ca3af;'>Evaluating landing premiums across critical oceanic inbound container channels into western coastal ports (Nhava Sheva, Mundra).</p>", unsafe_allow_html=True)
     
     base_container_cost = 2100 # Base USD per FEU container
     current_container_cost = base_container_cost * (1 + (freight_shock / 100)) + (brent_crude * 4.5)
     
-    st.markdown("<br>", unsafe_value=True)
+    st.markdown("<br>", unsafe_allow_html=True)
     sc1, sc2 = st.columns(2)
     sc1.metric("Simulated Import Container Rate (USD/FEU)", f"${current_container_cost:.2f}", f"+{freight_shock}% Active Freight Premium")
     
@@ -384,8 +384,8 @@ with t4:
 
 # --- TAB 5: NSE CAPITAL REALIZATION ---
 with t5:
-    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>📊 Nifty Listed Industry Valuation Translation Maps</h3>", unsafe_value=True)
-    st.markdown("<p style='color:#9ca3af;'>Projecting target equity multiple impacts based on institutional capital shifts following input margin contractions.</p>", unsafe_value=True)
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>📊 Nifty Listed Industry Valuation Translation Maps</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#9ca3af;'>Projecting target equity multiple impacts based on institutional capital shifts following input margin contractions.</p>", unsafe_allow_html=True)
     
     sectors = ['Automotive OEMs', 'Listed Paints & Coatings', 'Aviation (Aviation Fuel Vulnerability)', 'Oil Refiners / Upstream', 'Logistics & Express Cargo']
     multiples_baseline = [24.5, 55.0, 32.0, 11.5, 38.5]
@@ -413,14 +413,14 @@ with t5:
 
 # --- TAB 6: MONETARY INTERVENTION STANCE ---
 with t6:
-    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🏛️ Reserve Bank Stance & Sovereign Yield Trajectories</h3>", unsafe_value=True)
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>🏛️ Reserve Bank Stance & Sovereign Yield Trajectories</h3>", unsafe_allow_html=True)
     
     # Central Bank logic projection loop
     base_repo = 6.50
     implied_repo_hike = max(0, int((calc_cpi - 4.5) / 0.5) * 25) # 25 bps adjustments loops
     projected_repo = base_repo + (implied_repo_hike / 100)
     
-    st.markdown("<br>", unsafe_value=True)
+    st.markdown("<br>", unsafe_allow_html=True)
     rc1, rc2, rc3 = st.columns(3)
     rc1.metric("Implied Monetary Policy Adjustment", f"+{implied_repo_hike} bps", "Calculated Response Vector")
     rc2.metric("Projected Repo Rate Target", f"{projected_repo:.2%}", "Simulated Policy Anchor")
@@ -434,7 +434,7 @@ with t6:
 
 # --- TAB 7: BEHIND THE MATH ---
 with t7:
-    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>📜 Underlying Transmission Matrices & Formula Arrays</h3>", unsafe_value=True)
+    st.markdown("<h3 style='color:#ffffff; margin-top:10px;'>📜 Underlying Transmission Matrices & Formula Arrays</h3>", unsafe_allow_html=True)
     st.markdown("The calculations powering this analytical web framework are constructed using standard non-linear econometric pass-through vectors benchmarked from historic sub-continental supply disruptions:")
     
     st.markdown(r"""
@@ -451,7 +451,7 @@ with t7:
     *Where $\Phi_{Subsidy}$ captures the active Fertilizer Subsidy Absorbtion percentage passed down to primary cultivation inputs.*
     """)
     st.markdown("---")
-    st.markdown("<p style='color:#7c3aed; font-family: 'JetBrains Mono', monospace; font-size:11px;'>VERIFICATION MATRIX SECURITIES SYSTEM ENCRYPTED // END OF PIPELINE</p>", unsafe_value=True)
+    st.markdown("<p style='color:#7c3aed; font-family: 'JetBrains Mono', monospace; font-size:11px;'>VERIFICATION MATRIX SECURITIES SYSTEM ENCRYPTED // END OF PIPELINE</p>", unsafe_allow_html=True)
 
 # --- FOOTER ANCHOR ---
 st.markdown("""
@@ -459,4 +459,4 @@ st.markdown("""
 <div style="text-align: center; color: #6b7280; font-size: 11px; font-family: 'JetBrains Mono', monospace; padding-bottom: 20px;">
     🇮🇳 India Fuel Shock Regime Engine • Verification Tier-1 Secured (Cloud Sandboxed) • Built using Streamlit Core Architecture
 </div>
-""", unsafe_value=True)
+""", unsafe_allow_html=True)
