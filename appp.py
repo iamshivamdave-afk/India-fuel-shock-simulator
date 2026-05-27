@@ -119,7 +119,7 @@ monsoon_variant = st.sidebar.selectbox(
 )
 
 # ================= MATHEMATICAL TRANSMISSION COEFFICIENT MATRIX =================
-usd_inr_peg = 83.50
+usd_inr_peg = 95.80
 brent_base = 75.0
 delta_crude_pct = ((brent_anchor - brent_base) / brent_base) * 100
 delta_freight_pct = (hormuz_scale * 12.5)
@@ -147,18 +147,21 @@ wpi_projected = (
 cpi_projected = np.clip(cpi_projected, 1.5, 14.0)
 wpi_projected = np.clip(wpi_projected, -2.0, 24.0)
 
+# Retail Thali Shock Multipliers mapped to retail diesel shocks
+delta_diesel_pct = ((diesel_cost - 91.0) / 91.0) * 100  # Baseline index for diesel pass-through
 thali_shock_multiplier = 1.0
 if monsoon_variant == "Deficit (-12% El Niño)":
     thali_shock_multiplier = 1.35
 elif monsoon_variant == "Severe Drought Blockade":
     thali_shock_multiplier = 1.75
-thali_index_pct = 6.2 + (delta_crude_pct * 0.075) * thali_shock_multiplier
+    
+thali_index_pct = 6.2 + (delta_crude_pct * 0.025) + (delta_diesel_pct * 0.075) * thali_shock_multiplier
 
 # MoPNG Infrastructure Basket Pricing Formulation
 india_crude_basket = brent_anchor * 0.962
 calculated_lpg_comm = 1250.0 + (spot_lng * 18.50) + ((brent_anchor - 75.0) * 4.25)
 
-# System Risk Registry Diagnostics (Redesigned with professional terminology)
+# System Risk Registry Diagnostics
 if wpi_projected > 8.0 or brent_anchor > 110.0:
     risk_state = "ELEVATED STRESS REGIME"
     risk_color = "#ef4444"
@@ -198,7 +201,6 @@ with m_col5:
 st.markdown("---")
 
 # --- APP SYSTEM NAVIGATION TABS ---
-# Removed 'Food Tech Delivery Index' tab completely, Added '📚 Historical Crisis Comparator'
 tabs = st.tabs([
     "📚 Historical Crisis Comparator",
     "🌾 Kitchen Thali Logistics Engine", 
@@ -213,10 +215,8 @@ with tabs[0]:
     st.markdown("### 📚 Historical Crisis Comparator Engine")
     st.markdown("<p style='color:#9ca3af; font-size:0.9rem;'>Comparing active scenario parameters against historical shock regimes using integrated transmission weight arrays.</p>", unsafe_allow_html=True)
     
-    # Calculated values for fertilizer shock mapping
     calculated_fertilizer = float(np.clip(15 + (lagged_crude_pass * 0.22) + (spot_lng * 0.4), 10, 55))
     
-    # Dynamic risk state descriptor generation based on inputs
     if brent_anchor > 120:
         dynamic_risk = "Systemic Energy & Resource Dislocation"
     elif brent_anchor > 95:
@@ -224,7 +224,6 @@ with tabs[0]:
     else:
         dynamic_risk = "Bounded Macro Stress Dynamics"
 
-    # Core historical regime matrix definition
     historical_crisis_data = {
         "Russia-Ukraine War (2022 Peak)": {
             "brent": 128.0,
@@ -263,12 +262,11 @@ with tabs[0]:
             "fertilizer_shock": calculated_fertilizer,
             "lng_spike": float(spot_lng),
             "shipping_index": float(hormuz_scale),
-            "rupee": 83.5,
+            "rupee": float(usd_inr_peg),
             "risk_state": dynamic_risk
         }
     }
 
-    # --- SCORECARD SECTION ---
     severity_score = (
         (brent_anchor / 150.0) * 25.0 +
         (cpi_projected / 10.0) * 20.0 +
@@ -294,7 +292,6 @@ with tabs[0]:
         sev_cat = "Systemic Stress Event"
         sev_color = "#7c3aed"
 
-    # --- SIMILARITY MATRIX ENGINE BLOCK ---
     weights = {"brent": 0.35, "india_cpi": 0.20, "shipping_index": 0.20, "lng_spike": 0.15, "rupee": 0.10}
     current_state = historical_crisis_data["Current Simulation State"]
     similarity_outputs = {}
@@ -316,8 +313,7 @@ with tabs[0]:
     highest_analog_regime = max(similarity_outputs, key=similarity_outputs.get)
     highest_analog_pct = similarity_outputs[highest_analog_regime]
 
-    # --- CRITICAL REGIME SCENARIO UNCERTAINTY BAND ---
-    if brent_anchor > 130 or hormuz_scale > 8:
+    if brent_anchor > 130 or hormuz_scale > 8 or usd_inr_peg > 92:
         reliability_band = "ELEVATED UNCERTAINTY"
         reliability_color = "#ef4444"
     elif brent_anchor > 100 or hormuz_scale > 5:
@@ -357,7 +353,6 @@ with tabs[0]:
     col_v1, col_v2 = st.columns(2)
     
     with col_v1:
-        # Multi-Line Comparison Data Build
         line_records = []
         for regime, data in historical_crisis_data.items():
             line_records.append({"Regime": regime, "Metric": "Brent Crude", "Value": data["brent"]})
@@ -375,21 +370,18 @@ with tabs[0]:
         st.plotly_chart(fig_line, use_container_width=True)
 
     with col_v2:
-        # Radar Stress Data Matrix Mapping
         radar_categories = ['Inflation Stress', 'Freight Cost', 'LNG Shock', 'Currency Strain', 'Resource/Food Shock', 'Fiscal Impact']
         fig_radar = go.Figure()
         
         for name, data in historical_crisis_data.items():
-            # Normalized scalar calculation for radar representation bounds
             inf_val = (data["india_cpi"] / 12.0) * 100
             fr_val = (data["shipping_index"] / 10.0) * 100
             lng_val = (data["lng_spike"] / 60.0) * 100
-            curr_val = ((data["rupee"] - 40.0) / 50.0) * 100
+            curr_val = ((data["rupee"] - 40.0) / 60.0) * 100
             food_val = (data["fertilizer_shock"] / 60.0) * 100
             fisc_val = ((data["brent"] * data["shipping_index"]) / 1500.0) * 100
             
             r_values = [inf_val, fr_val, lng_val, curr_val, food_val, fisc_val]
-            # Close the radar loop array
             r_values.append(r_values[0])
             r_cats = radar_categories + [radar_categories[0]]
             
@@ -404,12 +396,11 @@ with tabs[0]:
         )
         st.plotly_chart(fig_radar, use_container_width=True)
 
-    # --- ADVANCED INSTITUTIONAL RBI-STYLE STRUCTURAL BLOCK ---
     st.markdown("#### 🏦 Advanced Policy Transmission & Vulnerability Matrix")
     col_p1, col_p2, col_p3 = st.columns(3)
     
     with col_p1:
-        imported_dep_ratio = float(np.clip(75.0 + (lagged_crude_pass * 0.08), 65.0, 92.0))
+        imported_dep_ratio = float(np.clip(75.0 + (lagged_crude_pass * 0.08), 65.0, 95.0))
         st.markdown(f"""
         <div class='metric-card'>
             <span style='color:#9ca3af;font-size:0.8rem;'>Imported Inflation Dependency Meter</span><br>
@@ -418,7 +409,7 @@ with tabs[0]:
         </div>
         """, unsafe_allow_html=True)
         
-        cad_pressure = float(np.clip(1.2 + (lagged_crude_pass * 0.025) + (hormuz_scale * 0.12), 0.5, 4.8))
+        cad_pressure = float(np.clip(1.2 + (lagged_crude_pass * 0.025) + (hormuz_scale * 0.12) + ((usd_inr_peg - 83.5) * 0.15), 0.5, 6.5))
         st.markdown(f"""
         <div class='metric-card' style='margin-top:1rem;'>
             <span style='color:#9ca3af;font-size:0.8rem;'>CAD Pressure Model (% of GDP)</span><br>
@@ -428,7 +419,7 @@ with tabs[0]:
         """, unsafe_allow_html=True)
 
     with col_p2:
-        subsidy_burden_incr_crore = float(max(0.0, (brent_anchor - 75.0) * 2300.0 + (spot_lng - 15.0) * 850.0))
+        subsidy_burden_incr_crore = float(max(0.0, (brent_anchor - 75.0) * 2300.0 + (spot_lng - 15.0) * 850.0 + ((usd_inr_peg - 83.5) * 1200.0)))
         st.markdown(f"""
         <div class='metric-card'>
             <span style='color:#9ca3af;font-size:0.8rem;'>Fiscal Subsidy Burden Deviation</span><br>
@@ -437,7 +428,7 @@ with tabs[0]:
         </div>
         """, unsafe_allow_html=True)
         
-        fx_stress_score = float(np.clip(15.0 + (lagged_crude_pass * 0.45) + (hormuz_scale * 2.5), 5.0, 95.0))
+        fx_stress_score = float(np.clip(15.0 + (lagged_crude_pass * 0.45) + (hormuz_scale * 2.5) + ((usd_inr_peg - 83.5) * 4.0), 5.0, 98.0))
         st.markdown(f"""
         <div class='metric-card' style='margin-top:1rem;'>
             <span style='color:#9ca3af;font-size:0.8rem;'>FX Reserve Stress Meter</span><br>
@@ -467,10 +458,12 @@ with tabs[0]:
 with tabs[1]:
     st.markdown("### 🚜 Agricultural Supply Chain Shock & Inter-State Bottlenecks")
     
-    # Core Commodities configuration array
     commodities = ["Tomato", "Onion", "Poultry Feed", "Potato", "Milk", "Edible Oils", "Pulses", "Sugar", "Rice", "Wheat"]
     base_shifts = [10.2, 8.5, 6.8, 6.4, 6.0, 5.6, 5.2, 4.8, 4.1, 3.8]
-    simulated_shifts = [b * (1 + (delta_crude_pct * 0.005) + (hormuz_scale * 0.015)) for b in base_shifts]
+    
+    # NEW FIX: Agri-basket is now fully responsive to standard commercial diesel costs and global crude
+    simulated_shifts = [b * (1 + (delta_crude_pct * 0.002) + (delta_diesel_pct * 0.012) + (hormuz_scale * 0.015)) for b in base_shifts]
+    
     df_thali = pd.DataFrame({"Commodity": commodities, "Projected Cost Shift (%)": simulated_shifts})
     df_thali = df_thali.sort_values(by="Projected Cost Shift (%)", ascending=True)
     
@@ -493,7 +486,6 @@ with tabs[1]:
         st.markdown("#### 🔍 Supply Chain Logistics Inspector")
         selected_commodity = st.selectbox("Select a core food component to inspect structural pipeline risk:", commodities)
         
-        # Comprehensive structural meta-data map for underlying categories
         commodity_meta = {
             "Tomato": {
                 "perishability": "EXTREME (3–5 Days Shelf Life)",
@@ -595,14 +587,12 @@ with tabs[3]:
     st.markdown("### 🥥 Edible Oil Import Intelligence & Landed Cost Waterfall Matrix")
     st.markdown("<p style='color:#9ca3af; font-size:0.9rem;'>Simulating transmission vectors from global commodity futures and shipping freight premiums down to consumer-level kitchen expenditure shock indices.</p>", unsafe_allow_html=True)
     
-    # Crude-Oil-To-CPO Link Framework Formula
     biofuel_cpo_premium = ((brent_anchor - 75.0) / 10.0) * 35.0
     shipping_freight_base = 45.0 + (hormuz_scale * 8.5)
     cpo_fob = 850.0 + biofuel_cpo_premium
     soy_fob = 930.0 + (((brent_anchor - 75.0) / 10.0) * 22.0)
     sun_fob = 900.0 + (delta_freight_pct * 1.5)
     
-    # Live International Markets Sub-grid
     oil_col_a, oil_col_b, oil_col_c, oil_col_d = st.columns(4)
     with oil_col_a:
         st.markdown(f"<div class='metric-card'><span style='color:#fb923c;font-size:0.8rem;'>Malaysian CPO Futures</span><br><span style='font-size:1.4rem;font-weight:700;'>${cpo_fob:.2f} / MT</span><br><span style='color:#9ca3af;font-size:0.75rem;'>Incl. Biofuel Premium: ${biofuel_cpo_premium:+.2f}</span></div>", unsafe_allow_html=True)
@@ -615,7 +605,6 @@ with tabs[3]:
         
     st.markdown("---")
     
-    # Cost Waterfall & Structural Allocations Layout
     wat_col, san_col = st.columns([3, 2])
     with wat_col:
         st.markdown("#### 🌊 Landed Crude Palm Oil (CPO) Cost Waterfall (USD/MT)")
@@ -640,7 +629,6 @@ with tabs[3]:
 
     with san_col:
         st.markdown("#### 🔄 Transmission Vector Flow")
-        # Lightweight representation flow mapping
         fig_san = go.Figure(data=[go.Sankey(
             node = dict(
               pad = 15, thickness = 20, line = dict(color = "black", width = 0.5),
@@ -655,16 +643,69 @@ with tabs[3]:
         fig_san.update_layout(title_text="Elasticity Link Propagation Tree", font_size=10, paper_bgcolor="rgba(0,0,0,0)", template="plotly_dark")
         st.plotly_chart(fig_san, use_container_width=True)
 
+    # ================= EXTRA EDIBLE OIL, FREIGHT & CONTAINER INTEL TABLES =================
+    st.markdown("---")
+    st.markdown("#### 📊 Granular Dislocation Data Matrix (Oil, Freight & Container Logistics Metrics)")
+    
+    container_base_feut = 1850.0 + (hormuz_scale * 450.0)
+    bunker_surcharge = 120.0 + (lagged_crude_pass * 2.50)
+    demurrage_premium = 45.0 + (hormuz_scale * 15.0)
+    total_teu_cost = (container_base_feut / 2.0) + bunker_surcharge + demurrage_premium
+
+    table_col1, table_col2 = st.columns(2)
+    
+    with table_col1:
+        st.markdown("##### 🥥 International Edible Oil Complex Benchmarks")
+        oil_complex_data = pd.DataFrame({
+            "Commodity Complex Element": [
+                "Crude Palm Oil (CPO) FOB Malaysia", 
+                "RBD Palm Olein FOB Singapore",
+                "Crude Soybean Oil FOB Santos",
+                "Crude Sunflower Oil CIF Rotterdam",
+                "Domestic Refined Mustard Oil (Approx Entry)"
+            ],
+            "Base Matrix ($/MT)": [850.00, 885.00, 930.00, 900.00, 1140.00],
+            "Simulated Stress ($/MT)": [cpo_fob, cpo_fob + 35.0, soy_fob, sun_fob, (cpo_fob * 1.12) + 120.0],
+            "Delta Deviation (%)": [
+                f"+{((cpo_fob - 850)/850)*100:.2f}%",
+                f"+{(((cpo_fob + 35) - 885)/885)*100:.2f}%",
+                f"+{((soy_fob - 930)/930)*100:.2f}%",
+                f"+{((sun_fob - 900)/900)*100:.2f}%",
+                f"+{((((cpo_fob * 1.12) + 120) - 1140)/1140)*100:.2f}%"
+            ]
+        })
+        st.dataframe(oil_complex_data, use_container_width=True, hide_index=True)
+
+    with table_col2:
+        st.markdown("##### ⚓ Maritime Freight & Container Corridor Intelligence")
+        shipping_freight_data = pd.DataFrame({
+            "Logistics Corridor Index Component": [
+                "Base FEU Container Route (Malacca-Mundra)", 
+                "Bunker Adjustment Factor (BAF Surcharge)",
+                "Port Congestion Demurrage Premium",
+                "War Risk Insurance Variable Rider",
+                "Blended Total per TEU Unit Equivalent"
+            ],
+            "Baseline Anchor ($)": [1850.00, 120.00, 45.00, 25.00, 1115.00],
+            "Simulated Stress ($)": [container_base_feut, bunker_surcharge, demurrage_premium, hormuz_scale * 65.0, total_teu_cost],
+            "Transmission Status": [
+                "Corridor Congested" if hormuz_scale > 6 else "Nominal Friction",
+                "Fuel Elasticity Linked",
+                "Turnaround Delay Action",
+                "Geopolitical Risk Weighted",
+                "Aggregated Pipeline Stress"
+            ]
+        })
+        st.dataframe(shipping_freight_data, use_container_width=True, hide_index=True)
+
 # ================= TAB 5: MONETARY INTERVENTION STANCE =================
 with tabs[4]:
     st.markdown("### 🏦 Internal Elasticity Framework Stance Simulation")
     
-    # Simple simulated yield curve shift calculation matrix
     tenors = ['3M', '6M', '1Y', '2Y', '5Y', '10Y', '30Y']
     base_yields = [6.75, 6.85, 7.05, 7.15, 7.22, 7.35, 7.50]
     
-    # Yield shift logic scales up dynamically under severe energy and inflation scenarios
-    shift_premium = (lagged_crude_pass * 0.006) + (hormuz_scale * 0.04)
+    shift_premium = (lagged_crude_pass * 0.006) + (hormuz_scale * 0.04) + ((usd_inr_peg - 83.5) * 0.015)
     simulated_yields = [b + shift_premium for b in base_yields]
     
     fig_yield = go.Figure()
@@ -702,11 +743,10 @@ with tabs[5]:
     $$severity\_score = \\left(\\frac{Brent_{Anchor}}{150}\\right) \\times 25 + \\left(\\frac{CPI_{Projected}}{10}\\right) \\times 20 + \\left(\\frac{WPI_{Projected}}{20}\\right) \\times 20 + \\left(\\frac{Hormuz_{Scale}}{10}\\right) \\times 20 + \\left(\\frac{Spot_{LNG}}{60}\\right) \\times 15$$
     """)
     
-    # --- MODEL LIMITATION EXPANDABLE BOX ---
     with st.expander("⚠️ Framework Assumptions & Model Limitations"):
         st.markdown("""
         * **Synthetic Coefficients:** Transmission coefficients are synthetic elasticity metrics and are not explicitly bound to active real-time econometric regressions.
-        * **No Econometric Calibration:** Standard autoregressive distributed lag (ARDL) or structural vector autoregression (SVAR) methods are not computed live within this engine layout.
+        * **No Econometric Calibration:** Standard autoregressive distributed lag (ARDL) or structural vector expression models are not computed live within this engine layout.
         * **No Lagged Monetary Effects:** Simulations assume immediate structural pass-through and do not parameterize the 3-to-4 quarter lagging effects typical of monetary transmission mechanisms.
         * **No Stochastic Volatility Modeling:** Volatility inputs are mapped linearly rather than through stochastic differential equation (SDE) frameworks like GARCH.
         * **No Dynamic Demand Destruction Effects:** Consumer elasticity parameters remain static under extreme pricing scenarios rather than downscaling dynamically to model demand reduction.
