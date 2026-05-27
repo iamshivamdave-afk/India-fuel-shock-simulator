@@ -94,6 +94,16 @@ header {visibility: hidden;}
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
+.diagnostic-box {
+    background: #0f172a;
+    border-left: 4px solid #f97316;
+    padding: 1.2rem;
+    border-radius: 0 8px 8px 0;
+    margin-top: 1rem;
+    border-top: 1px solid #1e293b;
+    border-right: 1px solid #1e293b;
+    border-bottom: 1px solid #1e293b;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -146,7 +156,7 @@ else:
     risk_color = "#10b981"
     ticker_status = "🟢 INSTANTANEOUS DATA PULLED // SYSTEM TARGET SECURE"
 
-# --- TOP DYNAMIC MACRO TICKER BLOCK (UPDATED: INDIAN CRUDE BASKET REMOVED) ---
+# --- TOP DYNAMIC MACRO TICKER BLOCK ---
 st.markdown(f"""
 <div class='macro-ticker-top'>
     <span>📡 LIVE REFRESH STRIP: HOT DATA SYNCED</span>
@@ -203,19 +213,116 @@ with tabs[0]:
         fig_delivery.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_delivery, use_container_width=True)
 
-# ================= TAB 2: KITCHEN THALI LOGISTICS ENGINE =================
+# ================= TAB 2: KITCHEN THALI LOGISTICS ENGINE (UPDATED WITH ADVANCED DIAGNOSTICS) =================
 with tabs[1]:
     st.markdown("### 🚜 Agricultural Supply Chain Shock & Inter-State Bottlenecks")
-    commodities = ["Wheat", "Rice", "Sugar", "Pulses", "Edible Oils", "Milk", "Potato", "Poultry Feed", "Onion", "Tomato"]
-    base_shifts = [3.8, 4.1, 4.8, 5.2, 5.6, 6.0, 6.4, 6.8, 8.5, 10.2]
-    simulated_shifts = [b * (1 + (delta_crude_pct * 0.004) + (hormuz_scale * 0.02)) for b in base_shifts]
+    
+    # Core Commodities configuration array
+    commodities = ["Tomato", "Onion", "Poultry Feed", "Potato", "Milk", "Edible Oils", "Pulses", "Sugar", "Rice", "Wheat"]
+    base_shifts = [10.2, 8.5, 6.8, 6.4, 6.0, 5.6, 5.2, 4.8, 4.1, 3.8]
+    simulated_shifts = [b * (1 + (delta_crude_pct * 0.005) + (hormuz_scale * 0.015)) for b in base_shifts]
     
     df_thali = pd.DataFrame({"Commodity": commodities, "Projected Cost Shift (%)": simulated_shifts})
-    df_thali = df_thali.sort_values(by="Projected Cost Shift (%)")
+    df_thali = df_thali.sort_values(by="Projected Cost Shift (%)", ascending=True)
     
-    fig_thali = px.bar(df_thali, x="Projected Cost Shift (%)", y="Commodity", orientation="h", title="Agricultural Supply Chain Cost Inflation Vector by Commodity", color="Projected Cost Shift (%)", color_continuous_scale="Oranges", template="plotly_dark")
-    fig_thali.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-    st.plotly_chart(fig_thali, use_container_width=True)
+    col_graph, col_diagnostic = st.columns([5, 4])
+    
+    with col_graph:
+        fig_thali = px.bar(
+            df_thali, 
+            x="Projected Cost Shift (%)", 
+            y="Commodity", 
+            orientation="h", 
+            title="Agricultural Supply Chain Cost Inflation Vector by Commodity", 
+            color="Projected Cost Shift (%)", 
+            color_continuous_scale="Oranges", 
+            template="plotly_dark"
+        )
+        fig_thali.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(t=30, b=10))
+        st.plotly_chart(fig_thali, use_container_width=True)
+        
+    with col_diagnostic:
+        st.markdown("#### 🔍 Supply Chain Logistics Inspector")
+        selected_commodity = st.selectbox("Select a core food component to inspect structural pipeline risk:", commodities)
+        
+        # Comprehensive structural meta-data map for underlying categories
+        commodity_meta = {
+            "Tomato": {
+                "perishability": "EXTREME (3–5 Days Shelf Life)",
+                "cold_store": "Critical deficit in temperature-controlled cold logistics. Requires instantaneous continuous cold transit links.",
+                "diesel_overhead": "Very High. Sourced rapidly via long-distance diesel reefer trucks from specialized hubs (e.g., Madanapalle, Kolar, Nashik) to consumption nodes.",
+                "why_highest": "Tomato experiences a compounding effect. Because it cannot be stored long-term to wait out transient energy spikes, wholesalers must bear the immediate brunt of retail diesel price spikes. High perishability prevents inventory buffering, leading to a direct, unmitigated pass-through of freight cost increases to the end retail shelf."
+            },
+            "Onion": {
+                "perishability": "Medium-High (Prone to Sprouting/Moisture Rot)",
+                "cold_store": "Highly reliant on specialized ventilated structures (Kanda Chawls); poor climate control instantly increases post-harvest waste.",
+                "diesel_overhead": "High. Concentrated production rings in Lasalgaon/Nashik require long-haul truck transport to feed pan-India cross-state demand.",
+                "why_highest": "Highly exposed to inter-state transit freight spikes. Any movement in commercial fuel directly impacts the thin distribution margins of bulk trade networks."
+            },
+            "Poultry Feed": {
+                "perishability": "Low-Medium (Silo Stable under dry conditions)",
+                "cold_store": "Minimal direct cold chain storage requirements; heavily dependent on atmospheric moisture controls.",
+                "diesel_overhead": "High. Demands extensive transport networks to move raw maize, soy meal inputs to mills, and finished feed back to regional farms.",
+                "why_highest": "Compounded processing overheads. Crude oil derivatives influence the manufacturing costs of foundational synthetic amino acids, while diesel powers the raw collection phase."
+            },
+            "Potato": {
+                "perishability": "Medium-Low (Highly Stable inside Cold Facilities)",
+                "cold_store": "Extremely Heavy. Demands 6–9 months of continuous mechanical cold preservation to regulate market release patterns.",
+                "diesel_overhead": "Medium-High. Sustained industrial power draw required to run storage compressors, combined with bulk freight handling.",
+                "why_highest": "Directly exposed to structural electricity and secondary industrial energy prices. Spikes in crude and wholesale fuel costs increase the day-to-day power overheads of cold hubs."
+            },
+            "Milk": {
+                "perishability": "High (Strict 24-48 Hour Chilling Window)",
+                "cold_store": "Absolute requirement for uninterrupted cold loops. Bulk milk coolers (BMCs) and insulated transit tankers must operate non-stop.",
+                "diesel_overhead": "Very High. Daily, continuous collection rounds from rural farms to urban processing plants cannot be skipped or delayed.",
+                "why_highest": "Daily transit mandate leaves zero timing flexibility. Constant temperature monitoring and non-stop reefer hauling make it incredibly vulnerable to diesel shocks."
+            },
+            "Edible Oils": {
+                "perishability": "Very Low (Long Storage Footprint)",
+                "cold_store": "Low direct cold infrastructure; managed via standard industrial tanks and bulk warehouse storage.",
+                "diesel_overhead": "High. Dominated by international shipping lane vulnerabilities and long port-to-refinery rail/road tank freight.",
+                "why_highest": "Heavily coupled with international shipping corridors and chemical processing costs. Global crude indices impact synthetic extraction chemistry and freight surcharges."
+            },
+            "Pulses": {
+                "perishability": "Low (Dry-Silo Stable)",
+                "cold_store": "Negligible cold store footprint. Relies primarily on dry, rodent-proof warehouse structures.",
+                "diesel_overhead": "Medium. Moving bulky grain volumes across states via traditional heavy-duty road transportation networks.",
+                "why_highest": "Input cost variations are driven almost entirely by base field mechanics and the standard long-haul transport rates from central assembly points."
+            },
+            "Sugar": {
+                "perishability": "Low (Dry Stable)",
+                "cold_store": "Zero cold storage demand. Kept in dry-bag warehouses.",
+                "diesel_overhead": "Medium-High. High freight volume required during the tight cane-harvest window to transport raw cane to regional crushing mills.",
+                "why_highest": "Heavily exposed to seasonal harvesting transport spikes. Processing operations rely on fuel and oil derivatives for field-clearing machinery and internal boiler systems."
+            },
+            "Rice": {
+                "perishability": "Very Low (Multi-Year Dry Silo Longevity)",
+                "cold_store": "None. Managed via central food silos or ambient storage facilities.",
+                "diesel_overhead": "Medium. Driven by large-scale, long-distance railway rake transport and secondary local tractor/truck hauling.",
+                "why_highest": "Protected by its long shelf life and high volume-to-weight logistics efficiencies, though still impacted by diesel costs during the procurement and milling stages."
+            },
+            "Wheat": {
+                "perishability": "Very Low (Multi-Year Ambient Storage Capacity)",
+                "cold_store": "None. Extensively stored in bulk ambient warehouses or government grain silos.",
+                "diesel_overhead": "Medium. Bulk freight costs incurred during mandi procurement rounds and distribution through the Public Distribution System (PDS).",
+                "why_highest": "Its long storage life and high volume-to-weight efficiency insulate it from immediate price spikes. Wholesalers can buffer stock to avoid transient transport shocks."
+            }
+        }
+        
+        meta = commodity_meta[selected_commodity]
+        idx = df_thali[df_thali["Commodity"] == selected_commodity]["Projected Cost Shift (%)"].values[0]
+        
+        st.markdown(f"""
+        <div class="diagnostic-box">
+            <h4 style="color:#f97316; margin:0 0 0.5rem 0;">📋 LOGISTICS PROFILE: {selected_commodity.upper()}</h4>
+            <p><b>Simulated Pipeline Inflation:</b> <span style="color:#f87171; font-weight:700;">{idx:.2f}%</span></p>
+            <p><b>Perishability Index:</b> {meta['perishability']}</p>
+            <p><b>Cold Storage Vulnerability:</b> {meta['cold_store']}</p>
+            <p><b>Diesel Transportation Footprint:</b> {meta['diesel_overhead']}</p>
+            <hr style="border:0; border-top:1px solid #1e293b; margin:1rem 0;">
+            <p style="color:#cbd5e1; font-size:0.875rem; line-height:1.5;"><b>Impact Analysis Matrix:</b> {meta['why_highest']}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ================= TAB 3: FMCG DEFENSE DOSSIERS =================
 with tabs[2]:
@@ -350,7 +457,7 @@ with tabs[3]:
     st.markdown("---")
     st.markdown("#### 🎚️ Stress Scenario Matrix Comparison Heatmap")
     
-    # 2D Matrix Generation: Brent Price Shock Steps vs Hormuz Strait Conflict Scale Steps
+    # 2D Matrix Generation: Fixed layout array parsing
     brent_steps = [80, 100, 120, 140]
     hormuz_steps = [2, 5, 8, 10]
     
@@ -466,7 +573,7 @@ with tabs[5]:
     #### Biofuel / Elastic Substitution Channel Vector
     $$\Delta CPO_{FOB} = \text{Base CPO} + \left( \frac{\text{Brent}_{Anchor} - 75.0}{10.0} \right) \times 35.0$$
 
-    #### Wholesales Pass-Through Dynamic
+    #### Wholesales Pass-Through Dynamic (Crude Oil to WPI Matrix)
     $$WPI_{Projected} = WPI_{Baseline} + (\Delta Crude \times 0.095) + (\Delta Freight \times 0.025)$$
 
     #### CPI Retail Pass-Through Dynamic
